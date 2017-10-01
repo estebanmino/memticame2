@@ -47,52 +47,49 @@ public class ContactsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
-        myPhoneContacts = mPhone.getContacts(getActivity());
-        contactsAdapter = new ContactsAdapter(getActivity(), myPhoneContacts);
-
-
+        firebaseDatabase.init();
         return inflater.inflate(R.layout.fragment_contacts, container, false);
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        contactsList = view.findViewById(R.id.contacts_list);
+        contactsAdapter = new ContactsAdapter(getActivity(), myPhoneContactsInDatabase);
+        contactsList.setAdapter(contactsAdapter);
         requestContactsPermission();
     }
 
-    private void getContacts(View view) {
+    private void setDataUsersListener() {
+        DatabaseReference usersDatabase = firebaseDatabase.getReference("users");
+        usersDatabase.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                numberList.clear();
+                for(DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                    Contact contact = userSnapshot.getValue(Contact.class);
+                    assert contact != null;
+                    numberList.add(contact.getPhone());
+                }
 
-        myPhoneContactsInDatabase.clear();
-        ArrayList<Contact> myPhoneContacts = mPhone.getContacts(getActivity());
-        for (Contact contact: myPhoneContacts) {
-            Log.i("CONTACTPHONEFROMCONTACT", contact.getPhone());
-
-            myPhoneContactsNumbers.add(contact.getPhone());
-            myPhoneContactsNames.add(contact.getEmail());
-        }
-
-        for (String contact: myPhoneContactsNumbers) {
-            Log.i("CONTACTPHONE", contact);
-        }
-
-        ContactsRequestFirebase contactsRequestFirebase = new ContactsRequestFirebase(firebaseDatabase,numberList);
-
-
-        Log.i("LENGHT", Integer.toString(numberList.size()));
-        for (String contact_number : numberList) {
-            Log.i("INDEX", contact_number);
-            int index = myPhoneContactsNumbers.indexOf(contact_number);
-            if (index != -1) {
-                myPhoneContactsInDatabase.add(myPhoneContacts.get(index));
+                myPhoneContactsInDatabase.clear();
+                ArrayList<Contact> myPhoneContacts = mPhone.getContacts(getActivity());
+                for (Contact contact: myPhoneContacts) {
+                    myPhoneContactsNumbers.add(contact.getPhone());
+                    myPhoneContactsNames.add(contact.getEmail());
+                }
+                for (String contact_number: numberList){
+                    int index = myPhoneContactsNumbers.indexOf(contact_number);
+                    if (index != -1) {
+                        Log.i("NUMBERFOUNF", myPhoneContacts.get(index).getPhone());
+                        myPhoneContactsInDatabase.add(myPhoneContacts.get(index));
+                    }
+                }
+                contactsAdapter.notifyDataSetChanged();
             }
-        }
-
-        contactsList = view.findViewById(R.id.contacts_list);
-        ContactsAdapter contactsAdapter = new ContactsAdapter(getActivity(), myPhoneContactsInDatabase);
-        contactsList.setAdapter(contactsAdapter);
-
-
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+        });
     }
 
     public void requestContactsPermission() {
@@ -101,7 +98,7 @@ public class ContactsFragment extends Fragment {
                 Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, CONTACTS_REQUEST);
         } else {
-            getContacts(getView());
+            setDataUsersListener();
         }
     }
 
@@ -114,7 +111,7 @@ public class ContactsFragment extends Fragment {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // permission was granted
-                    getContacts(getView());
+                    setDataUsersListener();
                 } else {
                     // permission denied
                     Toast.makeText(getActivity(), "Until you grant the permission, we canot display the contacts", Toast.LENGTH_LONG).show();
