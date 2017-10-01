@@ -1,19 +1,17 @@
-package com.memeticame.memeticame;
+package com.memeticame.memeticame.contacts;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -21,6 +19,8 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
+import com.memeticame.memeticame.invitations.InvitationActivity;
+import com.memeticame.memeticame.R;
 import com.memeticame.memeticame.models.Contact;
 import com.memeticame.memeticame.models.Database;
 import com.memeticame.memeticame.models.MyPhone;
@@ -29,6 +29,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ContactsFragment extends Fragment {
+
+    private static final String KEY_CONTACT_NAME = "contact_name";
+    private static final String KEY_CONTACT_EMAIL = "contact_email";
+    private static final String KEY_CONTACT_PHONE = "contact_phone";
 
     private ArrayList<Contact> myPhoneContacts;
     private MyPhone mPhone = new MyPhone();
@@ -58,6 +62,22 @@ public class ContactsFragment extends Fragment {
         contactsAdapter = new ContactsAdapter(getActivity(), myPhoneContactsInDatabase);
         contactsList.setAdapter(contactsAdapter);
         requestContactsPermission();
+        setContactsListListener();
+    }
+
+    private void setContactsListListener(){
+        contactsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Contact selected_contact = myPhoneContactsInDatabase.get(i);
+                Intent intent = InvitationActivity.getIntent(
+                        getActivity(),
+                        selected_contact.getPhone(),
+                        selected_contact.getEmail(),
+                        selected_contact.getName());
+                startActivity(intent);
+            }
+        });
     }
 
     private void setDataUsersListener() {

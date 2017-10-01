@@ -72,4 +72,36 @@ public class Database {
         });
     }
 
+
+    public void sendInvitation(final String contact_phone, final String message) {
+        DatabaseReference usersReference = mDatabase.getReference("users");
+
+        final String uuidInvitation = UUID.randomUUID().toString();
+        usersReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.hasChild(contact_phone)) {
+
+                    final String receiverInvitesPath = "users/"+contact_phone+"/invitations/"+uuidInvitation+"/";
+
+                    final DatabaseReference messageReference =
+                            mDatabase.getReference(receiverInvitesPath+"message");
+                    final DatabaseReference authorReference =
+                            mDatabase.getReference(receiverInvitesPath+"author");
+                    final DatabaseReference timestampReference =
+                            mDatabase.getReference(receiverInvitesPath+"timestamp");
+
+                    messageReference.setValue(message);
+                    authorReference.setValue(mAuth.getCurrentUser().getEmail());
+
+                    Date date = new Date();
+                    long timestamp =  date.getTime();
+                    timestampReference.setValue(timestamp);
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+    }
 }

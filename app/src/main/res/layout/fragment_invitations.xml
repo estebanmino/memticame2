@@ -2,12 +2,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.memeticame.memeticame.InvitationsFragment">
+    tools:context="com.memeticame.memeticame.invitations.InvitationsFragment">
 
     <!-- TODO: Update blank fragment layout -->
-    <TextView
+
+    <ListView
+        android:id="@+id/list_invitations"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="match_parent" />
 
 </FrameLayout>

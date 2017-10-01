@@ -43,7 +43,7 @@ public class MyPhone {
                             ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
                     String contact_phone = cursor_contacts.getString(cursor_contacts.getColumnIndex(
                             ContactsContract.CommonDataKinds.Phone.NUMBER));
-                    contact.setEmail(contact_name);
+                    contact.setName(contact_name);
                     contact.setPhone(contact_phone.replace(" ",",").replace("-",""));
                     array_list_contacts.add(contact);
                 }

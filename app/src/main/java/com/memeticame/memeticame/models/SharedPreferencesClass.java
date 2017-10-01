@@ -17,7 +17,7 @@ public class SharedPreferencesClass {
         sharedEditorPrefs = sharedPreferences.edit();
         sharedEditorPrefs.putString("phone",phone);
         sharedEditorPrefs.putString("email",email);
-
+        sharedEditorPrefs.commit();
     }
 
 }

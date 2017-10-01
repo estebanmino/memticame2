@@ -1,4 +1,4 @@
-package com.memeticame.memeticame;
+package com.memeticame.memeticame.invitations;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -7,20 +7,22 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import com.memeticame.memeticame.R;
 import com.memeticame.memeticame.models.Contact;
+import com.memeticame.memeticame.models.Invitation;
 
 import java.util.ArrayList;
 
 /**
- * Created by ESTEBANFML on 30-09-2017.
+ * Created by ESTEBANFML on 01-10-2017.
  */
 
-public class ContactsAdapter extends BaseAdapter {
+public class InvitationsAdapter extends BaseAdapter {
 
     private final Context context;
-    private final ArrayList<Contact> contactsArrayList;
+    private final ArrayList<Invitation> contactsArrayList;
 
-    public ContactsAdapter(Context context, ArrayList<Contact> contactsArrayList) {
+    public InvitationsAdapter(Context context, ArrayList<Invitation> contactsArrayList) {
         this.context = context;
         this.contactsArrayList = contactsArrayList;
     }
@@ -51,12 +53,13 @@ public class ContactsAdapter extends BaseAdapter {
         final TextView contactName = convertView.findViewById(R.id.contact_name);
         final TextView contactPhone = convertView.findViewById(R.id.contact_phone);
 
-        final String elementName = contactsArrayList.get(position).getEmail();
-        final String elementPhone = contactsArrayList.get(position).getPhone();
+        final String elementAuthor = contactsArrayList.get(position).getAuthor();
+        final String elementMessage = contactsArrayList.get(position).getMessage();
 
-        contactName.setText(elementName);
-        contactPhone.setText(elementPhone);
+        contactName.setText(elementAuthor);
+        contactPhone.setText(elementMessage);
 
         return convertView;
     }
+
 }

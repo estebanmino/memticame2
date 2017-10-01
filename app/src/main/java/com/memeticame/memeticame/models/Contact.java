@@ -10,8 +10,17 @@ public class Contact {
 
     private String email;
     private String phone;
+    private String name;
     private String id;
     private HashMap<String, String> contacts = null;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public String getId() {
         return id;
