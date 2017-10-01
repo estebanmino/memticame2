@@ -1,0 +1,107 @@
+{
+  "project_info": {
+    "project_number": "919192847844",
+    "firebase_url": "https://memeticame-177318.firebaseio.com",
+    "project_id": "memeticame-177318",
+    "storage_bucket": "memeticame-177318.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:919192847844:android:afc571802ae5dd9a",
+        "android_client_info": {
+          "package_name": "memeticame.memeticame"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "919192847844-k2o5hsi2q5eg7nplibt8clvhqhqea5sf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "memeticame.memeticame",
+            "certificate_hash": "ea557afe52f586c9cfa6f9ace7af884c7b4c9bf7"
+          }
+        },
+        {
+          "client_id": "919192847844-38or0ifpllh2paempd7kij5nehf8cqfm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "memeticame.memeticame",
+            "certificate_hash": "72d09a6f40ca92c939afde74e6f1768d7214c331"
+          }
+        },
+        {
+          "client_id": "919192847844-6qp2v5q7gftslrak84p13s2agmhjt0o5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEmavEFF8DDWBPzt9TmkeWnidoRDZ3bnA"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "919192847844-6qp2v5q7gftslrak84p13s2agmhjt0o5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:919192847844:android:8c6a38cb2493a283",
+        "android_client_info": {
+          "package_name": "com.memeticame.memeticame"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "919192847844-57frfeaftas0rgbrdkpdvmqptso8pc7s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.memeticame.memeticame",
+            "certificate_hash": "ea557afe52f586c9cfa6f9ace7af884c7b4c9bf7"
+          }
+        },
+        {
+          "client_id": "919192847844-6qp2v5q7gftslrak84p13s2agmhjt0o5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEmavEFF8DDWBPzt9TmkeWnidoRDZ3bnA"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "919192847844-6qp2v5q7gftslrak84p13s2agmhjt0o5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

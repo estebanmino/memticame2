@@ -1,5 +1,7 @@
 package com.memeticame.memeticame;
 
+import android.content.Context;
+import android.content.Intent;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
@@ -18,6 +20,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import android.widget.TextView;
+
+import com.google.firebase.auth.FirebaseAuth;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -73,6 +77,9 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            FirebaseAuth.getInstance().signOut();
+            startActivity(AuthenticationActivity.getIntent(MainActivity.this));
+            finish();
             return true;
         }
 
@@ -126,5 +133,10 @@ public class MainActivity extends AppCompatActivity {
             }
             return null;
         }
+    }
+
+    public static Intent getIntent(Context context) {
+        Intent intent = new Intent(context,MainActivity.class);
+        return intent;
     }
 }
