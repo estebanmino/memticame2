@@ -81,7 +81,6 @@ public class ContactsFragment extends Fragment {
                 for (String contact_number: numberList){
                     int index = myPhoneContactsNumbers.indexOf(contact_number);
                     if (index != -1) {
-                        Log.i("NUMBERFOUNF", myPhoneContacts.get(index).getPhone());
                         myPhoneContactsInDatabase.add(myPhoneContacts.get(index));
                     }
                 }

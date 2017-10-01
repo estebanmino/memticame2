@@ -40,7 +40,6 @@ public class ContactsRequestFirebase extends AsyncTask {
                     Contact contact = userSnapshot.getValue(Contact.class);
                     assert contact != null;
                     numberList.add(contact.getPhone());
-                    Log.i("GETPHONE", contact.getPhone());
                 }
             }
             @Override

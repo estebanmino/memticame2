@@ -2,6 +2,7 @@ package com.memeticame.memeticame;
 
 import android.content.Context;
 import android.content.Intent;
+import android.provider.ContactsContract;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
@@ -25,19 +26,8 @@ import com.google.firebase.auth.FirebaseAuth;
 
 public class MainActivity extends AppCompatActivity {
 
-    /**
-     * The {@link android.support.v4.view.PagerAdapter} that will provide
-     * fragments for each of the sections. We use a
-     * {@link FragmentPagerAdapter} derivative, which will keep every
-     * loaded fragment in memory. If this becomes too memory intensive, it
-     * may be best to switch to a
-     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
-     */
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
-    /**
-     * The {@link ViewPager} that will host the section contents.
-     */
     private ViewPager mViewPager;
 
     @Override
@@ -57,9 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
-
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -76,11 +64,19 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            FirebaseAuth.getInstance().signOut();
-            startActivity(AuthenticationActivity.getIntent(MainActivity.this));
-            finish();
-            return true;
+        switch (id) {
+            case  R.id.action_add_contact:
+                Intent intent = new Intent(Intent.ACTION_INSERT_OR_EDIT);
+                intent.setType(ContactsContract.Contacts.CONTENT_ITEM_TYPE);
+                startActivity(intent);
+                return true;
+
+
+            case R.id.action_log_out:
+                FirebaseAuth.getInstance().signOut();
+                startActivity(AuthenticationActivity.getIntent(MainActivity.this));
+                finish();
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
