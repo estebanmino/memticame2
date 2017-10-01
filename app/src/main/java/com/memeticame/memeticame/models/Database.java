@@ -1,5 +1,8 @@
 package com.memeticame.memeticame.models;
 
+import android.content.Context;
+import android.util.Log;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -68,4 +71,5 @@ public class Database {
             }
         });
     }
+
 }

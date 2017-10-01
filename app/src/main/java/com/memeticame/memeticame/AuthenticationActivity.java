@@ -2,6 +2,7 @@ package com.memeticame.memeticame;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,13 +18,21 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import org.w3c.dom.Text;
+
+import com.google.firebase.database.ValueEventListener;
+import com.memeticame.memeticame.models.Contact;
 import com.memeticame.memeticame.models.Database;
 import com.memeticame.memeticame.MainActivity;
 import com.memeticame.memeticame.R;
+import com.memeticame.memeticame.models.SharedPreferencesClass;
+
+import java.util.ArrayList;
 
 public class AuthenticationActivity extends AppCompatActivity {
 
@@ -164,14 +173,20 @@ public class AuthenticationActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
-                            Log.d("CUEAP", "createUserWithEmail:success");
                             FirebaseUser user = mAuth.getCurrentUser();
                             startActivity(MainActivity.getIntent(AuthenticationActivity.this));
                             //updateUI(user);
                             createUser(email, phone);
+                            SharedPreferencesClass sharedPreferencesClass = new SharedPreferencesClass();
+                            sharedPreferencesClass.setUsersPreferences(
+                                    getSharedPreferences("UserData",Context.MODE_PRIVATE),
+                                    email,
+                                    phone
+                            );
+
+
                         } else {
                             // If sign in fails, display a message to the user.
-                            Log.w("CUEAP", "createUserWithEmail:failure", task.getException());
                             Toast.makeText(AuthenticationActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
                             //updateUI(null);
@@ -182,7 +197,7 @@ public class AuthenticationActivity extends AppCompatActivity {
                 });
     }
 
-    private void signInWithEmailAndPassword(String email, String password) {
+    private void signInWithEmailAndPassword(final String email, String password) {
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
@@ -193,6 +208,7 @@ public class AuthenticationActivity extends AppCompatActivity {
                             FirebaseUser user = mAuth.getCurrentUser();
                             startActivity(MainActivity.getIntent(AuthenticationActivity.this));
                             //updateUI(user);
+                            setDatabaseListenerForPhone(email);
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w("SIGNIN", "signInWithEmail:failure", task.getException());
@@ -203,6 +219,30 @@ public class AuthenticationActivity extends AppCompatActivity {
                     }
                 });
     }
+
+    public void setDatabaseListenerForPhone(final String email){
+        DatabaseReference usersDatabase = firebaseDatabase.getReference("users");
+        usersDatabase.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                    Contact contact = userSnapshot.getValue(Contact.class);
+                    if (contact.getEmail().equals(email)){
+                        SharedPreferencesClass sharedPreferencesClass = new SharedPreferencesClass();
+                        sharedPreferencesClass.setUsersPreferences(
+                                getSharedPreferences("UserData",Context.MODE_PRIVATE),
+                                email,
+                                contact.getPhone()
+                        );
+                        break;
+                    }
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+        });
+    }
+
     public final static boolean isValidEmail(CharSequence target) {
         if (target == null) {
             return false;
@@ -218,7 +258,7 @@ public class AuthenticationActivity extends AppCompatActivity {
     private void createUser(String email, String phone) {
 
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference myUserRef = database.getReference("users/");
+        DatabaseReference myUserRef = database.getReference("users");
         DatabaseReference phoneChild = myUserRef.child(phone);
 
         phoneChild.child("email").setValue(email);

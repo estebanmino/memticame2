@@ -63,14 +63,12 @@ public class MainActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         switch (id) {
             case  R.id.action_add_contact:
                 Intent intent = new Intent(Intent.ACTION_INSERT_OR_EDIT);
                 intent.setType(ContactsContract.Contacts.CONTENT_ITEM_TYPE);
                 startActivity(intent);
                 return true;
-
 
             case R.id.action_log_out:
                 FirebaseAuth.getInstance().signOut();
