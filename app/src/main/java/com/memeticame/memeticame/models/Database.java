@@ -1,7 +1,9 @@
 package com.memeticame.memeticame.models;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -39,9 +41,9 @@ public class Database {
         return mDatabase.getReference(somewhere);
     }
 
-    public void sendMessageTo(final String content, final String receiverPhone) {
+    public void sendMessageTo(final String content, final String currentUserPhone, final String receiverPhone) {
         DatabaseReference currentUserContactsReference = mDatabase.getReference("users/"+
-                mAuth.getCurrentUser().getEmail()+"/contacts");
+                currentUserPhone+"/contacts");
 
         final String uuidMessage = UUID.randomUUID().toString();
         currentUserContactsReference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -59,7 +61,7 @@ public class Database {
                             mDatabase.getReference(referencePath+"timestamp");
 
                     contentReference.setValue(content);
-                    authorReference.setValue(mAuth.getCurrentUser().getEmail());
+                    authorReference.setValue(currentUserPhone);
 
                     Date date = new Date();
                     long timestamp =  date.getTime();
@@ -72,8 +74,23 @@ public class Database {
         });
     }
 
+    public void acceptInvitation(final String uid, final String currentUserPhone, final String invitationPhone) {
 
-    public void sendInvitation(final String contact_phone, final String message) {
+        String uuidChatRoom = UUID.randomUUID().toString();
+        DatabaseReference myUserPhoneReference =
+                mDatabase.getReference("users/" + currentUserPhone + "/contacts/" + invitationPhone);
+        myUserPhoneReference.setValue(uuidChatRoom);
+
+        DatabaseReference contactUserPhoneReference =
+                mDatabase.getReference("users/" + invitationPhone + "/contacts/" + currentUserPhone);
+        contactUserPhoneReference.setValue(uuidChatRoom);
+
+        DatabaseReference invitationReference =
+                mDatabase.getReference("users/" + currentUserPhone + "/invitations/" + uid);
+        invitationReference.removeValue();
+    }
+
+    public void sendInvitation(final String contact_phone, final String message, final String currentUserPhone) {
         DatabaseReference usersReference = mDatabase.getReference("users");
 
         final String uuidInvitation = UUID.randomUUID().toString();
@@ -87,12 +104,15 @@ public class Database {
                     final DatabaseReference messageReference =
                             mDatabase.getReference(receiverInvitesPath+"message");
                     final DatabaseReference authorReference =
-                            mDatabase.getReference(receiverInvitesPath+"author");
+                            mDatabase.getReference(receiverInvitesPath+"authorMail");
+                    final DatabaseReference authorPhoneReference =
+                            mDatabase.getReference(receiverInvitesPath+"authorPhone");
                     final DatabaseReference timestampReference =
                             mDatabase.getReference(receiverInvitesPath+"timestamp");
 
                     messageReference.setValue(message);
                     authorReference.setValue(mAuth.getCurrentUser().getEmail());
+                    authorPhoneReference.setValue(currentUserPhone);
 
                     Date date = new Date();
                     long timestamp =  date.getTime();

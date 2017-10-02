@@ -2,6 +2,7 @@ package com.memeticame.memeticame.invitations;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -54,10 +55,12 @@ public class InvitationActivity extends AppCompatActivity {
     }
 
     public void setBtnSendListener() {
+        SharedPreferences shared = getSharedPreferences("UserData", MODE_PRIVATE);
+        final String currentUserPhone = (shared.getString("phone", ""));
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                database.sendInvitation(inviteContact.getPhone(), editMessage.getText().toString());
+                database.sendInvitation(inviteContact.getPhone(), editMessage.getText().toString(), currentUserPhone);
             }
         });
     }

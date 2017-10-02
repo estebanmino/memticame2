@@ -57,7 +57,6 @@ public class InvitationsFragment extends Fragment {
     public void setInvitationsListener() {
         sharedPreferences = getActivity().getSharedPreferences("UserData",Context.MODE_PRIVATE);
         String currentUserPhone =sharedPreferences.getString("phone", null);
-        Log.i("CURRENTPHONE", currentUserPhone);
         DatabaseReference currentUserInvitationsRef = firebaseDatabase.getReference("users/"+currentUserPhone+"/invitations");
         currentUserInvitationsRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -65,6 +64,7 @@ public class InvitationsFragment extends Fragment {
                 invitationsArray.clear();
                 for(DataSnapshot inviteSnapshot : dataSnapshot.getChildren()) {
                     Invitation invitation = inviteSnapshot.getValue(Invitation.class);
+                    invitation.setUid(inviteSnapshot.getKey());
                     invitationsArray.add(invitation);
                 }
                 invitationsAdapter.notifyDataSetChanged();

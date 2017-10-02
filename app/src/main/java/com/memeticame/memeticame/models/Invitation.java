@@ -6,16 +6,34 @@ package com.memeticame.memeticame.models;
 
 public class Invitation {
 
-    private String author;
+    private String uid;
+    private String authorMail;
+    private String authorPhone;
     private String message;
     private Long timestamp;
 
-    public String getAuthor() {
-        return author;
+    public String getAuthorPhone() {
+        return authorPhone;
     }
 
-    public void setAuthor(String author) {
-        this.author = author;
+    public void setAuthorPhone(String authorPhone) {
+        this.authorPhone = authorPhone;
+    }
+
+    public String getUid() {
+        return uid;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
+    }
+
+    public String getAuthorMail() {
+        return authorMail;
+    }
+
+    public void setAuthorMail(String authorMail) {
+        this.authorMail = authorMail;
     }
 
     public String getMessage() {
