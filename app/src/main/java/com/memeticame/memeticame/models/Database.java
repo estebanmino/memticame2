@@ -12,6 +12,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceIdService;
 
 import java.util.Date;
 import java.util.UUID;
@@ -45,23 +46,20 @@ public class Database {
         DatabaseReference currentUserContactsReference = mDatabase.getReference("users/"+
                 currentUserPhone+"/contacts");
 
-        Log.i("REFERENCE PATH", "users/"+
-                currentUserPhone+"/contacts");
-
         final String uuidMessage = UUID.randomUUID().toString();
         currentUserContactsReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.hasChild(receiverPhone)) {
                     final String referencePath = "chatRooms/"+dataSnapshot.
-                            child(receiverPhone).getValue().toString()+"/"+uuidMessage+"/";
+                            child(receiverPhone).getValue().toString()+"/messages/"+uuidMessage;
 
                     final DatabaseReference contentReference =
-                            mDatabase.getReference(referencePath+"content");
+                            mDatabase.getReference(referencePath+"/content");
                     final DatabaseReference authorReference =
-                            mDatabase.getReference(referencePath+"author");
+                            mDatabase.getReference(referencePath+"/author");
                     final DatabaseReference timestampReference =
-                            mDatabase.getReference(referencePath+"timestamp");
+                            mDatabase.getReference(referencePath+"/timestamp");
 
                     contentReference.setValue(content);
                     authorReference.setValue(currentUserPhone);
@@ -91,6 +89,16 @@ public class Database {
         DatabaseReference invitationReference =
                 mDatabase.getReference("users/" + currentUserPhone + "/invitations/" + uid);
         invitationReference.removeValue();
+
+        final DatabaseReference chatRoomReference =
+                mDatabase.getReference("chatRooms/"+uuidChatRoom);
+
+        final DatabaseReference firstUserReference =
+                mDatabase.getReference("chatRooms/"+uuidChatRoom+"/firstUser/");
+        firstUserReference.setValue(currentUserPhone);
+        final DatabaseReference secondUserReference =
+                mDatabase.getReference("chatRooms/"+uuidChatRoom+"/secondUser/");
+        secondUserReference.setValue(invitationPhone);
     }
 
     public void rejectInvitation(final String uid, final String currentUserPhone, final String invitationPhone) {
@@ -134,4 +142,8 @@ public class Database {
             }
         });
     }
+
+    public void sendNotification(String user, String message) {
+    }
+
 }

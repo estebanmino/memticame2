@@ -93,7 +93,7 @@ public class ChatRoomActivity extends AppCompatActivity {
 
     public void listenForMessages() {
         String chatRoomUuid = getIntent().getStringExtra(KEY_CHAT_ROOM_UUID);
-        DatabaseReference chatRommReference = firebaseDatabase.getReference("chatRooms/"+chatRoomUuid+"/");
+        DatabaseReference chatRommReference = firebaseDatabase.getReference("chatRooms/"+chatRoomUuid+"/messages");
 
         chatRommReference.addValueEventListener(new ValueEventListener() {
             @Override
@@ -134,6 +134,7 @@ public class ChatRoomActivity extends AppCompatActivity {
                         editMessage.getText().toString(),
                         currentUserPhone,
                         chatContact.getPhone());
+                editMessage.setText("");
             }
         });
     }
