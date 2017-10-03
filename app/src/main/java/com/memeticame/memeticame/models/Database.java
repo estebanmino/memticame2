@@ -1,10 +1,11 @@
 package com.memeticame.memeticame.models;
 
-import android.content.Context;
-import android.content.SharedPreferences;
+import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.util.Log;
-import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -12,8 +13,12 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.iid.FirebaseInstanceIdService;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 
@@ -27,11 +32,13 @@ public class Database {
     private FirebaseDatabase mDatabase;
     public FirebaseAuth mAuth;
     public Boolean isMyContactResult = false;
+    private StorageReference mStorageRef;
 
 
     public void init() {
         mDatabase = FirebaseDatabase.getInstance();
         mAuth = FirebaseAuth.getInstance();
+        mStorageRef = FirebaseStorage.getInstance().getReference();
     }
 
     public FirebaseUser getCurrentUser() {
@@ -42,9 +49,36 @@ public class Database {
         return mDatabase.getReference(somewhere);
     }
 
-    public void sendMessageTo(final String content, final String currentUserPhone, final String receiverPhone) {
+    private void uploadFile(final Message message, String filePath) {
+        if (message.getMultimedia() != null) {
+            Uri file = Uri.fromFile(new File(filePath));
+            StorageReference riversRef = mStorageRef.child(message.getMultimedia());
+
+            riversRef.putFile(file)
+                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            // Get a URL to the uploaded content
+                            @SuppressWarnings("VisibleForTests") Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            // Handle unsuccessful uploads
+                            // ...
+                        }
+                    });
+        }
+    }
+
+    public void sendMessageTo(final String content, final Message message, final String receiverPhone, final String filePath) {
+        final String currentUserPhone = message.getAuthor();
+        final String multimediaFile = message.getMultimedia();
         DatabaseReference currentUserContactsReference = mDatabase.getReference("users/"+
                 currentUserPhone+"/contacts");
+
+        uploadFile(message,filePath);
 
         final String uuidMessage = UUID.randomUUID().toString();
         currentUserContactsReference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -60,10 +94,19 @@ public class Database {
                             mDatabase.getReference(referencePath+"/author");
                     final DatabaseReference timestampReference =
                             mDatabase.getReference(referencePath+"/timestamp");
+                    final DatabaseReference multimediaReference =
+                            mDatabase.getReference(referencePath+"/multimedia");
+                    final DatabaseReference downloadUrlReference =
+                            mDatabase.getReference(referencePath+"/multimediaUrl");
 
                     contentReference.setValue(content);
                     authorReference.setValue(currentUserPhone);
-
+                    downloadUrlReference.setValue(message.getMultimediaUrl());
+                    if (multimediaFile!= null) {
+                        multimediaReference.setValue(message.getMultimedia());
+                    } else {
+                        multimediaReference.setValue(null);
+                    }
                     Date date = new Date();
                     long timestamp =  date.getTime();
                     timestampReference.setValue(timestamp);

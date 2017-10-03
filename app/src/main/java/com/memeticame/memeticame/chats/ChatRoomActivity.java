@@ -1,14 +1,23 @@
 package com.memeticame.memeticame.chats;
 
 import android.Manifest;
+import android.app.Activity;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
+import android.media.MediaScannerConnection;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -79,6 +88,7 @@ public class ChatRoomActivity extends AppCompatActivity {
 
     private ConstraintLayout constraintAttachments;
     private ImageView imageAddAttachment;
+    private ImageView imageAttachment;
     private ListView listView;
 
     private FloatingActionButton fabCamera;
@@ -91,13 +101,9 @@ public class ChatRoomActivity extends AppCompatActivity {
     private String mPath;
     private View mLayout;
 
-    public static Intent getIntent(Context context, String name, String phone, String chatRoomUuid) {
-        Intent intent = new Intent(context,ChatRoomActivity.class);
-        intent.putExtra(KEY_USERNAME,name);
-        intent.putExtra(KEY_PHONE,phone);
-        intent.putExtra(KEY_CHAT_ROOM_UUID,chatRoomUuid);
-        return intent;
-    }
+    private Message message;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,7 +116,7 @@ public class ChatRoomActivity extends AppCompatActivity {
         currentUserPhone =sharedPreferences.getString("phone", null);
 
         setChatContact();
-        ABSOLUTE_STORAGE_PATH = getExternalCacheDir().getAbsolutePath();
+        ABSOLUTE_STORAGE_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString();
         mRecordFileName = ABSOLUTE_STORAGE_PATH + "/audiorecordtest.3gp";
 
 
@@ -120,6 +126,9 @@ public class ChatRoomActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowHomeEnabled(true);
             getSupportActionBar().setTitle(chatContact.getName());
         }
+
+        message = new Message();
+        message.setAuthor(currentUserPhone);
 
         mLayout = findViewById(R.id.chat_room_layout);
 
@@ -132,6 +141,8 @@ public class ChatRoomActivity extends AppCompatActivity {
         constraintAttachments = (ConstraintLayout) findViewById(R.id.constraint_attachments);
         constraintAttachments.setVisibility(View.GONE);
         imageAddAttachment = (ImageView) findViewById(R.id.image_add_attachment);
+        imageAttachment = (ImageView) findViewById(R.id.image_attachment);
+        imageAttachment.setVisibility(View.GONE);
         listView = (ListView) findViewById(R.id.reyclerview_message_list);
 
         setOnClickImageAddAttachment();
@@ -162,7 +173,10 @@ public class ChatRoomActivity extends AppCompatActivity {
                     if (!isRecording) {
                         Long tsLong = System.currentTimeMillis()/1000;
                         String ts = tsLong.toString();
-                        startRecording();
+                        String audioMultimedia = ABSOLUTE_STORAGE_PATH+ts.toString()+".mp3";
+                        startRecording(audioMultimedia);
+                        message.setMultimedia("audios/"+ts.toString()+".mp3");
+                        mPath = ABSOLUTE_STORAGE_PATH+ts.toString()+".mp3";
                     }
                 } else {
                     getRecorAudioPermissions();
@@ -241,12 +255,12 @@ public class ChatRoomActivity extends AppCompatActivity {
         mPlayer = null;
     }
 
-    private void startRecording() {
+    private void startRecording(String audioMultimedia) {
         isRecording = true;
         mRecorder = new MediaRecorder();
         mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-        mRecorder.setOutputFile(mRecordFileName);
+        mRecorder.setOutputFile(audioMultimedia);
         mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
 
         try {
@@ -589,13 +603,16 @@ public class ChatRoomActivity extends AppCompatActivity {
             fabSend.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                        if (!editMessage.getText().toString().matches("")){
-                        firebaseDatabase.sendMessageTo(
-                                editMessage.getText().toString(),
-                                currentUserPhone,
-                                chatContact.getPhone());
-                        editMessage.setText("");
-                    }
+                    if (!editMessage.getText().toString().matches("")){
+                    firebaseDatabase.sendMessageTo(
+                            editMessage.getText().toString(),
+                            message,
+                            chatContact.getPhone(),
+                            mPath);
+                    editMessage.setText("");
+                    imageAttachment.setVisibility(View.GONE);
+                    message = new Message();
+                }
                 }
             });
     }
@@ -675,4 +692,207 @@ public class ChatRoomActivity extends AppCompatActivity {
 
         }
     }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == Activity.RESULT_OK) {
+            switch (requestCode){
+                case CAMERA_REQUEST_PICTURE:
+                    MediaScannerConnection.scanFile(this,
+                            new String[]{mPath}, null,
+                            new MediaScannerConnection.OnScanCompletedListener() {
+                                @Override
+                                public void onScanCompleted(String path, Uri uri) {
+                                    Log.i("ExternalStorage", "scanned"+path+":");
+                                    Log.i("ExternalStorage", "-> Uri"+uri);
+                                }
+                            });
+                    message.setMultimedia("images/"+mPath.substring(mPath.lastIndexOf("/") + 1));
+                    Bitmap bitmap = BitmapFactory.decodeFile(mPath);
+                    imageAttachment.setVisibility(View.VISIBLE);
+                    imageAttachment.setImageBitmap(ThumbnailUtils.extractThumbnail(bitmap, 80, 80));
+                    imageAttachment.setRotation(90);
+
+                    break;
+
+                case SELECT_IMAGE:
+
+                    if (data != null)
+                    {
+                        mPath = getRealPathFromURI_API19(getApplicationContext(),data.getData());
+                        message.setMultimedia("images/"+mPath.substring(mPath.lastIndexOf("/") + 1));
+                        Bitmap bitmapSlected = BitmapFactory.decodeFile(mPath);
+                        imageAttachment.setVisibility(View.VISIBLE);
+                        imageAttachment.setImageBitmap(ThumbnailUtils.extractThumbnail(bitmapSlected, 80, 80));
+                        imageAttachment.setRotation(90);
+                        //lesson.getMultimediaPicturesFiles().add(new MultimediaFile(EXTENSION_PICTURE,mPath, transferUtility,S3_BUCKET_NAME));
+                        //multimediaImagePictureAdapter.notifyDataSetChanged();
+
+
+                    } else if (resultCode == Activity.RESULT_CANCELED) {
+                        //Toast.makeText(LessonFormActivity.this, "Cancelled", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+
+                case FILES_REQUEST:
+                    Uri selectedUri = data.getData();
+                    mPath = getPath(ChatRoomActivity.this, selectedUri);
+                    message.setMultimedia("files/"+ mPath.substring(mPath.lastIndexOf("/") + 1));
+
+                    break;
+
+            }
+        }
+    }
+
+    public static Intent getIntent(Context context, String name, String phone, String chatRoomUuid) {
+        Intent intent = new Intent(context,ChatRoomActivity.class);
+        intent.putExtra(KEY_USERNAME,name);
+        intent.putExtra(KEY_PHONE,phone);
+        intent.putExtra(KEY_CHAT_ROOM_UUID,chatRoomUuid);
+        return intent;
+    }
+
+    public static String getRealPathFromURI_API19(Context context, Uri uri){
+        String filePath = "";
+        String wholeID = DocumentsContract.getDocumentId(uri);
+
+        // Split at colon, use second item in the array
+        String id = wholeID.split(":")[1];
+
+        String[] column = { MediaStore.Images.Media.DATA };
+
+        // where id is equal to
+        String sel = MediaStore.Images.Media._ID + "=?";
+
+        Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                column, sel, new String[]{ id }, null);
+
+        int columnIndex = cursor.getColumnIndex(column[0]);
+
+        if (cursor.moveToFirst()) {
+            filePath = cursor.getString(columnIndex);
+        }
+        cursor.close();
+        return filePath;
+    }
+
+    public static String getPath(final Context context, final Uri uri) {
+
+        final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
+
+        // DocumentProvider
+        if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
+            // ExternalStorageProvider
+            if (isExternalStorageDocument(uri)) {
+                final String docId = DocumentsContract.getDocumentId(uri);
+                final String[] split = docId.split(":");
+                final String type = split[0];
+
+                if ("primary".equalsIgnoreCase(type)) {
+                    return Environment.getExternalStorageDirectory() + "/" + split[1];
+                }
+
+                // TODO handle non-primary volumes
+            }
+            // DownloadsProvider
+            else if (isDownloadsDocument(uri)) {
+
+                final String id = DocumentsContract.getDocumentId(uri);
+                final Uri contentUri = ContentUris.withAppendedId(
+                        Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+
+                return getDataColumn(context, contentUri, null, null);
+            }
+            // MediaProvider
+            else if (isMediaDocument(uri)) {
+                final String docId = DocumentsContract.getDocumentId(uri);
+                final String[] split = docId.split(":");
+                final String type = split[0];
+
+                Uri contentUri = null;
+                if ("image".equals(type)) {
+                    contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                } else if ("video".equals(type)) {
+                    contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                } else if ("audio".equals(type)) {
+                    contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                }
+
+                final String selection = "_id=?";
+                final String[] selectionArgs = new String[] {
+                        split[1]
+                };
+
+                return getDataColumn(context, contentUri, selection, selectionArgs);
+            }
+        }
+        // MediaStore (and general)
+        else if ("content".equalsIgnoreCase(uri.getScheme())) {
+            return getDataColumn(context, uri, null, null);
+        }
+        // File
+        else if ("file".equalsIgnoreCase(uri.getScheme())) {
+            return uri.getPath();
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the value of the data column for this Uri. This is useful for
+     * MediaStore Uris, and other file-based ContentProviders.
+     *
+     * @param context The context.
+     * @param uri The Uri to query.
+     * @param selection (Optional) Filter used in the query.
+     * @param selectionArgs (Optional) Selection arguments used in the query.
+     * @return The value of the _data column, which is typically a file path.
+     */
+    public static String getDataColumn(Context context, Uri uri, String selection,
+                                       String[] selectionArgs) {
+
+        Cursor cursor = null;
+        final String column = "_data";
+        final String[] projection = {
+                column
+        };
+
+        try {
+            cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
+                    null);
+            if (cursor != null && cursor.moveToFirst()) {
+                final int column_index = cursor.getColumnIndexOrThrow(column);
+                return cursor.getString(column_index);
+            }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+        return null;
+    }
+
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is ExternalStorageProvider.
+     */
+    public static boolean isExternalStorageDocument(Uri uri) {
+        return "com.android.externalstorage.documents".equals(uri.getAuthority());
+    }
+
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is DownloadsProvider.
+     */
+    public static boolean isDownloadsDocument(Uri uri) {
+        return "com.android.providers.downloads.documents".equals(uri.getAuthority());
+    }
+
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is MediaProvider.
+     */
+    public static boolean isMediaDocument(Uri uri) {
+        return "com.android.providers.media.documents".equals(uri.getAuthority());
+    }
+
 }
