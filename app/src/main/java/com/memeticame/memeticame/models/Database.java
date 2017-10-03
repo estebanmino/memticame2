@@ -45,6 +45,9 @@ public class Database {
         DatabaseReference currentUserContactsReference = mDatabase.getReference("users/"+
                 currentUserPhone+"/contacts");
 
+        Log.i("REFERENCE PATH", "users/"+
+                currentUserPhone+"/contacts");
+
         final String uuidMessage = UUID.randomUUID().toString();
         currentUserContactsReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -84,6 +87,13 @@ public class Database {
         DatabaseReference contactUserPhoneReference =
                 mDatabase.getReference("users/" + invitationPhone + "/contacts/" + currentUserPhone);
         contactUserPhoneReference.setValue(uuidChatRoom);
+
+        DatabaseReference invitationReference =
+                mDatabase.getReference("users/" + currentUserPhone + "/invitations/" + uid);
+        invitationReference.removeValue();
+    }
+
+    public void rejectInvitation(final String uid, final String currentUserPhone, final String invitationPhone) {
 
         DatabaseReference invitationReference =
                 mDatabase.getReference("users/" + currentUserPhone + "/invitations/" + uid);

@@ -96,7 +96,6 @@ public class InvitationsAdapter extends BaseAdapter {
         btnAccept.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i("ACCEPT", "acceoted");
                 mDatabase.acceptInvitation(invitationUid, currentUserPhone, invitationPhone);
             }
         });
@@ -106,7 +105,7 @@ public class InvitationsAdapter extends BaseAdapter {
         btnReject.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i("REJECT", "rejected");
+                mDatabase.rejectInvitation(invitationUid, currentUserPhone, invitationPhone);
             }
         });
     }
