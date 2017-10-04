@@ -15,10 +15,12 @@ import android.media.MediaRecorder;
 import android.media.MediaScannerConnection;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -33,16 +35,25 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.memeticame.memeticame.R;
 import com.memeticame.memeticame.models.Contact;
 import com.memeticame.memeticame.models.Database;
 import com.memeticame.memeticame.models.Message;
+import com.memeticame.memeticame.models.SendMessage;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,6 +61,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.UUID;
 
 public class ChatRoomActivity extends AppCompatActivity {
 
@@ -96,6 +108,7 @@ public class ChatRoomActivity extends AppCompatActivity {
     private FloatingActionButton fabAudio;
     private FloatingActionButton fabImages;
     private FloatingActionButton fabFiles;
+    private ProgressBar progressBar;
 
     //LOCAL VARIABLES
     private String mPath;
@@ -140,6 +153,8 @@ public class ChatRoomActivity extends AppCompatActivity {
         fabFiles = (FloatingActionButton) findViewById(R.id.fab_files);
         fabImages = (FloatingActionButton) findViewById(R.id.fab_images);
 
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
+
         constraintAttachments = (ConstraintLayout) findViewById(R.id.constraint_attachments);
         constraintAttachments.setVisibility(View.GONE);
         imageAddAttachment = (ImageView) findViewById(R.id.image_add_attachment);
@@ -181,6 +196,9 @@ public class ChatRoomActivity extends AppCompatActivity {
                         startRecording(audioMultimedia);
                         multimedia = "audios/"+ts.toString()+".3gp";
                         mPath = audioMultimedia;
+                        imageAttachment.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_play_audio));
+                        imageAttachment.setVisibility(View.VISIBLE);
+
                     }
                 } else {
                     getRecorAudioPermissions();
@@ -611,18 +629,13 @@ public class ChatRoomActivity extends AppCompatActivity {
             fabSend.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+
                     if (!editMessage.getText().toString().matches("")){
-                    if (firebaseDatabase.sendMessageTo(
-                            editMessage.getText().toString(),
-                            author,
-                            multimedia,
-                            chatContact.getPhone(),
-                            mPath)) {
-                        editMessage.setText("");
-                        imageAttachment.setVisibility(View.GONE);
+                        SendMessage sendMessage=  new SendMessage();
+                        sendMessage.execute(author, chatContact.getPhone(),
+                                multimedia, mPath, editMessage.getText().toString());
                         multimedia = null;
                     }
-                }
                 }
             });
     }
@@ -747,7 +760,8 @@ public class ChatRoomActivity extends AppCompatActivity {
                     Uri selectedUri = data.getData();
                     mPath = getPath(ChatRoomActivity.this, selectedUri);
                     multimedia = "files/"+ mPath.substring(mPath.lastIndexOf("/") + 1);
-
+                    imageAttachment.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_file_download));
+                    imageAttachment.setVisibility(View.VISIBLE);
                     break;
 
                 case CAMERA_REQUEST_FOR_VIDEO:
@@ -764,6 +778,8 @@ public class ChatRoomActivity extends AppCompatActivity {
                     mPath = getPath(ChatRoomActivity.this, videoUri);
                     multimedia = "videos/"+mPath.substring(mPath.lastIndexOf("/") + 1);
                     Log.i("SENDVIDEO",mPath);
+                    imageAttachment.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_play_video));
+                    imageAttachment.setVisibility(View.VISIBLE);
 
                     break;
             }
@@ -921,4 +937,122 @@ public class ChatRoomActivity extends AppCompatActivity {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
 
+    public class SendMessage extends AsyncTask<String,Float,Integer> {
+
+        private FirebaseAuth mAuth;
+        private FirebaseDatabase mDatabase;
+        private StorageReference mStorageRef;
+
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar.setProgress(0);
+            if (multimedia != null) {
+                progressBar.setVisibility(View.VISIBLE);
+            }
+        }
+
+        @Override
+        protected void onProgressUpdate(Float... values) {
+            super.onProgressUpdate(values);
+            int p = Math.round(values[0]);
+            Log.i("PROGRESS INT", Integer.toString(p));
+
+            progressBar.setProgress(p);
+        }
+
+        @Override
+        protected void onPostExecute(Integer integer) {
+            super.onPostExecute(integer);
+            progressBar.setVisibility(View.GONE);
+            imageAttachment.setVisibility(View.GONE);
+            editMessage.setText("");
+
+        }
+
+        @Override
+        protected Integer doInBackground(String... strings) {
+            mDatabase = FirebaseDatabase.getInstance();
+            mAuth = FirebaseAuth.getInstance();
+            mStorageRef = FirebaseStorage.getInstance().getReference();
+            final String currentUserPhone = strings[0];
+            final String multimediaFile = strings[2];
+            final String filePath = strings[3];
+            final String receiverPhone = strings[1];
+            final String content = strings[4];
+            DatabaseReference currentUserContactsReference = mDatabase.getReference("users/"+
+                    currentUserPhone+"/contacts");
+
+            if (multimediaFile != null) {
+                Uri file = Uri.fromFile(new File(filePath));
+                StorageReference riversRef = mStorageRef.child(multimediaFile);
+
+                riversRef.putFile(file)
+
+                        .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                // Get a URL to the uploaded content
+                                @SuppressWarnings("VisibleForTests") Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                // Handle unsuccessful uploads
+                                // ...
+                            }
+                        });
+            }
+            Log.i("PROGRESS","50");
+            publishProgress(50f);
+
+            final String uuidMessage = UUID.randomUUID().toString();
+            currentUserContactsReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.hasChild(receiverPhone)) {
+                        final String referencePath = "chatRooms/"+dataSnapshot.
+                                child(receiverPhone).getValue().toString()+"/messages/"+uuidMessage;
+
+                        final DatabaseReference contentReference =
+                                mDatabase.getReference(referencePath+"/content");
+                        final DatabaseReference authorReference =
+                                mDatabase.getReference(referencePath+"/author");
+                        final DatabaseReference timestampReference =
+                                mDatabase.getReference(referencePath+"/timestamp");
+                        final DatabaseReference multimediaReference =
+                                mDatabase.getReference(referencePath+"/multimedia");
+                        Log.i("PROGRESS","60");
+                        publishProgress(60f);
+
+
+                        contentReference.setValue(content);
+                        authorReference.setValue(currentUserPhone);
+                        Log.i("PROGRESS","80");
+                        publishProgress(80f);
+
+
+                        if (multimediaFile!= null) {
+                            multimediaReference.setValue(multimediaFile);
+                        } else {
+                            multimediaReference.setValue(null);
+                        }
+                        Date date = new Date();
+                        long timestamp =  date.getTime();
+                        timestampReference.setValue(timestamp);
+                        Log.i("PROGRESS","100");
+                        publishProgress(100f);
+
+
+                    }
+                }
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                }
+            });
+            return null;
+        }
+    }
 }

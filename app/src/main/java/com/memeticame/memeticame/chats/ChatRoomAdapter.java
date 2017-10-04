@@ -115,10 +115,10 @@ public class ChatRoomAdapter extends BaseAdapter {
         } else  {
             switch(messageFetched.getMultimedia().substring(0, messageFetched.getMultimedia().lastIndexOf("/"))) {
                 case "images":
-                    StorageReference riversRef = mStorageRef.child(messageFetched.getMultimedia());
-                    try {
+                    /*StorageReference riversRef = mStorageRef.child(messageFetched.getMultimedia());
+                    /*try {
                         final File localFile = File.createTempFile("images", "jpg", context.getCacheDir());
-                        riversRef.getFile(localFile)
+                        /*riversRef.getFile(localFile)
                                 .addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
                                     @Override
                                     public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
@@ -147,7 +147,7 @@ public class ChatRoomAdapter extends BaseAdapter {
                             }
                         });
                     } catch (Exception e) {
-                    }
+                    }*/
                     break;
                 case "files":
                     imageAttachmentPreview.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_file_download));

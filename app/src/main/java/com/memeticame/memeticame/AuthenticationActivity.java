@@ -118,7 +118,7 @@ public class AuthenticationActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 int validations = 0;
-                String email = editEmail.getText().toString();
+                String email = editEmail.getText().toString().replace(" ","");
                 if (email.matches("") || !isValidEmail(email)) {
                     Toast.makeText(AuthenticationActivity.this, "You did not enter a valid email", Toast.LENGTH_SHORT).show();
                     validations++;
@@ -141,7 +141,7 @@ public class AuthenticationActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 int validations = 0;
-                String email = editEmail.getText().toString();
+                String email = editEmail.getText().toString().replace(" ","");
                 if (email.matches("") || !isValidEmail(email)) {
                     Toast.makeText(AuthenticationActivity.this, "You did not enter a valid email", Toast.LENGTH_SHORT).show();
                     validations++;
