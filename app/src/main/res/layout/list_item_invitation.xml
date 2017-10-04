@@ -68,7 +68,7 @@
             android:layout_marginLeft="8dp"
             android:layout_marginRight="0dp"
             android:layout_marginTop="8dp"
-            android:background="@android:color/holo_green_light"
+            android:background="@color/colorPrimary"
             android:elevation="0dp"
             android:text="Aceptar"
             android:textColor="@android:color/background_light"
