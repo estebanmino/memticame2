@@ -154,10 +154,11 @@ public class ChatRoomAdapter extends BaseAdapter {
                     break;
 
                 case "audios":
+                    imageAttachmentPreview.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_play_audio));
                     break;
                 case "videos":
+                    imageAttachmentPreview.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_play_video));
                     break;
-
             }
         }
 

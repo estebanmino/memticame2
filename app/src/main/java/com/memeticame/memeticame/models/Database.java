@@ -49,10 +49,10 @@ public class Database {
         return mDatabase.getReference(somewhere);
     }
 
-    private void uploadFile(final Message message, String filePath) {
-        if (message.getMultimedia() != null) {
+    private void uploadFile(final String multimedia, String filePath) {
+        if (multimedia != null) {
             Uri file = Uri.fromFile(new File(filePath));
-            StorageReference riversRef = mStorageRef.child(message.getMultimedia());
+            StorageReference riversRef = mStorageRef.child(multimedia);
 
             riversRef.putFile(file)
                     .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -72,13 +72,14 @@ public class Database {
         }
     }
 
-    public void sendMessageTo(final String content, final Message message, final String receiverPhone, final String filePath) {
-        final String currentUserPhone = message.getAuthor();
-        final String multimediaFile = message.getMultimedia();
+    public boolean sendMessageTo(final String content, final String author, final String multimedia,
+                                 final String receiverPhone, final String filePath) {
+        final String currentUserPhone = author;
+        final String multimediaFile = multimedia;
         DatabaseReference currentUserContactsReference = mDatabase.getReference("users/"+
                 currentUserPhone+"/contacts");
 
-        uploadFile(message,filePath);
+        uploadFile(multimedia,filePath);
 
         final String uuidMessage = UUID.randomUUID().toString();
         currentUserContactsReference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -96,14 +97,12 @@ public class Database {
                             mDatabase.getReference(referencePath+"/timestamp");
                     final DatabaseReference multimediaReference =
                             mDatabase.getReference(referencePath+"/multimedia");
-                    final DatabaseReference downloadUrlReference =
-                            mDatabase.getReference(referencePath+"/multimediaUrl");
+
 
                     contentReference.setValue(content);
                     authorReference.setValue(currentUserPhone);
-                    downloadUrlReference.setValue(message.getMultimediaUrl());
                     if (multimediaFile!= null) {
-                        multimediaReference.setValue(message.getMultimedia());
+                        multimediaReference.setValue(multimedia);
                     } else {
                         multimediaReference.setValue(null);
                     }
@@ -116,6 +115,7 @@ public class Database {
             public void onCancelled(DatabaseError databaseError) {
             }
         });
+        return true;
     }
 
     public void acceptInvitation(final String uid, final String currentUserPhone, final String invitationPhone) {

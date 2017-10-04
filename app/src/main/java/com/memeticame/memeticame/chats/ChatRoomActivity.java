@@ -102,6 +102,9 @@ public class ChatRoomActivity extends AppCompatActivity {
     private View mLayout;
 
     private Message message;
+    private String author;
+    private String multimedia;
+    private String multimediaUrl;
 
 
 
@@ -127,8 +130,7 @@ public class ChatRoomActivity extends AppCompatActivity {
             getSupportActionBar().setTitle(chatContact.getName());
         }
 
-        message = new Message();
-        message.setAuthor(currentUserPhone);
+        author = currentUserPhone;
 
         mLayout = findViewById(R.id.chat_room_layout);
 
@@ -173,10 +175,12 @@ public class ChatRoomActivity extends AppCompatActivity {
                     if (!isRecording) {
                         Long tsLong = System.currentTimeMillis()/1000;
                         String ts = tsLong.toString();
-                        String audioMultimedia = ABSOLUTE_STORAGE_PATH+ts.toString()+".mp3";
+                        String audioMultimedia = ABSOLUTE_STORAGE_PATH+"/"+ts.toString()+".3gp";
+                        Log.i("RECORDING AUDIO", ABSOLUTE_STORAGE_PATH);
+                        Log.i("RECORDING AUDIO PATH", audioMultimedia);
                         startRecording(audioMultimedia);
-                        message.setMultimedia("audios/"+ts.toString()+".mp3");
-                        mPath = ABSOLUTE_STORAGE_PATH+ts.toString()+".mp3";
+                        multimedia = "audios/"+ts.toString()+".3gp";
+                        mPath = audioMultimedia;
                     }
                 } else {
                     getRecorAudioPermissions();
@@ -275,7 +279,7 @@ public class ChatRoomActivity extends AppCompatActivity {
         isRecording = false;
         mRecorder.stop();
         mRecorder.release();
-        mRecorder = null;
+        //mRecorder = null;
         //lesson.getMultimediaAudiosFiles().add(new MultimediaFile("AUDIO",mRecordFileName, transferUtility, S3_BUCKET_NAME));
     }
 
@@ -476,10 +480,12 @@ public class ChatRoomActivity extends AppCompatActivity {
                 APP_DIRECTORY + File.separator + imageName;
         File newFile = new File(file, imageName);
 
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-        takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(newFile));
-        startActivityForResult(takePictureIntent, CAMERA_REQUEST_FOR_VIDEO);
+        Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        takeVideoIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(newFile));
+        takeVideoIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        if (takeVideoIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takeVideoIntent, CAMERA_REQUEST_FOR_VIDEO);
+        }
     }
 
     public void setOnClickFabFiles(){
@@ -506,8 +512,10 @@ public class ChatRoomActivity extends AppCompatActivity {
                 }
                 else {
                     Intent intent = new Intent();
-                    intent.setType("image/*");
+                    //intent.setType("image/*");
                     intent.setAction(Intent.ACTION_GET_CONTENT);
+                    Uri uri = Uri.parse(ABSOLUTE_STORAGE_PATH);
+                    intent.setDataAndType(uri, "image/*");
                     startActivityForResult(Intent.createChooser(intent, "Select Picture"),SELECT_IMAGE);
                 }
             }
@@ -604,14 +612,16 @@ public class ChatRoomActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
                     if (!editMessage.getText().toString().matches("")){
-                    firebaseDatabase.sendMessageTo(
+                    if (firebaseDatabase.sendMessageTo(
                             editMessage.getText().toString(),
-                            message,
+                            author,
+                            multimedia,
                             chatContact.getPhone(),
-                            mPath);
-                    editMessage.setText("");
-                    imageAttachment.setVisibility(View.GONE);
-                    message = new Message();
+                            mPath)) {
+                        editMessage.setText("");
+                        imageAttachment.setVisibility(View.GONE);
+                        multimedia = null;
+                    }
                 }
                 }
             });
@@ -706,7 +716,7 @@ public class ChatRoomActivity extends AppCompatActivity {
                                     Log.i("ExternalStorage", "-> Uri"+uri);
                                 }
                             });
-                    message.setMultimedia("images/"+mPath.substring(mPath.lastIndexOf("/") + 1));
+                    multimedia = "images/"+mPath.substring(mPath.lastIndexOf("/") + 1);
                     Bitmap bitmap = BitmapFactory.decodeFile(mPath);
                     imageAttachment.setVisibility(View.VISIBLE);
                     imageAttachment.setImageBitmap(ThumbnailUtils.extractThumbnail(bitmap, 80, 80));
@@ -719,7 +729,7 @@ public class ChatRoomActivity extends AppCompatActivity {
                     if (data != null)
                     {
                         mPath = getRealPathFromURI_API19(getApplicationContext(),data.getData());
-                        message.setMultimedia("images/"+mPath.substring(mPath.lastIndexOf("/") + 1));
+                        multimedia = "images/"+mPath.substring(mPath.lastIndexOf("/") + 1);
                         Bitmap bitmapSlected = BitmapFactory.decodeFile(mPath);
                         imageAttachment.setVisibility(View.VISIBLE);
                         imageAttachment.setImageBitmap(ThumbnailUtils.extractThumbnail(bitmapSlected, 80, 80));
@@ -736,10 +746,26 @@ public class ChatRoomActivity extends AppCompatActivity {
                 case FILES_REQUEST:
                     Uri selectedUri = data.getData();
                     mPath = getPath(ChatRoomActivity.this, selectedUri);
-                    message.setMultimedia("files/"+ mPath.substring(mPath.lastIndexOf("/") + 1));
+                    multimedia = "files/"+ mPath.substring(mPath.lastIndexOf("/") + 1);
 
                     break;
 
+                case CAMERA_REQUEST_FOR_VIDEO:
+                    MediaScannerConnection.scanFile(this,
+                            new String[]{mPath}, null,
+                            new MediaScannerConnection.OnScanCompletedListener() {
+                                @Override
+                                public void onScanCompleted(String path, Uri uri) {
+                                    Log.i("ExternalStorage", "scanned"+path+":");
+                                    Log.i("ExternalStorage", "-> Uri"+uri);
+                                }
+                            });
+                    Uri videoUri = data.getData();
+                    mPath = getPath(ChatRoomActivity.this, videoUri);
+                    multimedia = "videos/"+mPath.substring(mPath.lastIndexOf("/") + 1);
+                    Log.i("SENDVIDEO",mPath);
+
+                    break;
             }
         }
     }
