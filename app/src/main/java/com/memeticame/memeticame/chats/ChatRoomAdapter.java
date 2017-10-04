@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaPlayer;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -19,6 +20,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,6 +31,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.memeticame.memeticame.R;
 import com.memeticame.memeticame.models.Message;
@@ -36,6 +39,7 @@ import com.memeticame.memeticame.models.SharedPreferencesClass;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.security.Timestamp;
 import java.text.Format;
 import java.text.SimpleDateFormat;
@@ -43,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import static android.R.attr.author;
+import static android.R.attr.targetActivity;
 
 /**
  * Created by ESTEBANFML on 02-10-2017.
@@ -112,6 +117,7 @@ public class ChatRoomAdapter extends BaseAdapter {
         final TextView timestamp = convertView.findViewById(R.id.text_message_time);
         final ImageView imageAttachmentPreview = convertView.findViewById(R.id.image_attachment_preview);
         final Button btnDownload = convertView.findViewById(R.id.btn_download);
+        final ProgressBar progressBar = convertView.findViewById(R.id.progress_bar);
 
         final Message messageFetched = messagesList.get(position);
         final String messageContent = messageFetched.getContent();
@@ -122,53 +128,82 @@ public class ChatRoomAdapter extends BaseAdapter {
         if (messageFetched.getMultimedia() == null){
             imageAttachmentPreview.setVisibility(View.GONE);
             btnDownload.setVisibility(View.GONE);
-        } else  {
-            if (messageFetched.getMultimediaPath() != null) {
-                btnDownload.setText("DOWNLOADED");
-            }
-            btnDownload.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    DownloadFile downloadFile =  new DownloadFile(btnDownload, messageFetched);
-                    downloadFile.execute(messageFetched.getAuthor(), "",
-                            messageFetched.getMultimedia());
-                }
-            });
-            switch(messageFetched.getMultimedia().substring(0, messageFetched.getMultimedia().lastIndexOf("/"))) {
-                case "images":
-                    /*StorageReference riversRef = mStorageRef.child(messageFetched.getMultimedia());
-                    try {
-                        final File localFile = File.createTempFile("images", "jpg", context.getCacheDir());
-                        /*riversRef.getFile(localFile)
-                                .addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-                                    @Override
-                                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                                        // Successfully downloaded data to local file
-                                        // ...
-                                        Bitmap bitmapSlected = BitmapFactory.decodeFile(localFile.getPath());
-                                        imageAttachmentPreview.setVisibility(View.VISIBLE);
-                                        imageAttachmentPreview.setImageBitmap(ThumbnailUtils.extractThumbnail(bitmapSlected, 80, 80));
-                                        imageAttachmentPreview.setRotation(90);
-                                        imageAttachmentPreview.setOnClickListener(new View.OnClickListener() {
+
+        } else if (messageFetched.getMultimediaPath() != null && messageFetched.getMultimediaPath().length() > 3) {
+                final String multimediaFile = messageFetched.getMultimediaPath();
+                btnDownload.setText("OPEN");
+                btnDownload.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        switch (multimediaFile.substring(0, multimediaFile.lastIndexOf("/"))) {
+                            case "images":
+                                Intent intent = new Intent(Intent.ACTION_VIEW);
+                                String title = context.getResources().getString(R.string.hello_blank_fragment);
+                                intent.setDataAndType(Uri.parse(
+                                        Uri.fromFile(new File(multimediaFile)).toString()), "image/*");
+                                Intent chooser = Intent.createChooser(intent, title);
+                                if (chooser.resolveActivity(context.getPackageManager()) != null) {
+                                    context.startActivity(chooser);
+                                }
+                                break;
+                            case "videos":
+                                Intent intent1 = new Intent(Intent.ACTION_VIEW);
+                                String title1 = context.getResources().getString(R.string.hello_blank_fragment);
+                                intent1.setDataAndType(Uri.parse(
+                                        Uri.fromFile(new File(multimediaFile)).toString()), "video/*");
+                                Intent chooser1 = Intent.createChooser(intent1, title1);
+                                if (chooser1.resolveActivity(context.getPackageManager()) != null) {
+                                    context.startActivity(chooser1);
+                                }
+                                break;
+
+                            case "audios":
+
+                                MediaPlayer mediaPlayer = new MediaPlayer();
+                                mediaPlayer.setOnPreparedListener(
+                                        new MediaPlayer.OnPreparedListener() {
                                             @Override
-                                            public void onClick(View view) {
-                                                Intent intent = new Intent();
-                                                intent.setAction(Intent.ACTION_VIEW);
-                                                intent.setDataAndType(Uri.fromFile(localFile), "image/*");
-                                                context.startActivity(intent);
+                                            public void onPrepared(MediaPlayer mediaPlayer) {
+                                                mediaPlayer.start();
                                             }
                                         });
+                                try {
+                                    mediaPlayer.setDataSource(context,
+                                            Uri.parse(multimediaFile));
+                                    mediaPlayer.prepareAsync();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                                break;
 
-                                    }
-                                }).addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception exception) {
-                                // Handle failed download
-                                // ...
-                            }
-                        });
-                    } catch (Exception e) {
-                    }*/
+                            case "files":
+                                String ext = multimediaFile.substring(multimediaFile.lastIndexOf(".") + 1);
+
+                                Intent intent3 = new Intent(Intent.ACTION_VIEW);
+                                String title3 = context.getResources().getString(R.string.hello_blank_fragment);
+                                intent3.setDataAndType(Uri.parse(
+                                        Uri.fromFile(new File(multimediaFile)).toString()), "application/pdf");
+                                Intent chooser3 = Intent.createChooser(intent3, title3);
+                                if (chooser3.resolveActivity(context.getPackageManager()) != null) {
+                                    context.startActivity(chooser3);
+                                }
+                                break;
+
+                        }
+                    }
+                });
+                } else {
+                    btnDownload.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            DownloadFile downloadFile = new DownloadFile(context, btnDownload, progressBar, messageFetched);
+                            downloadFile.execute(messageFetched.getAuthor(), "",
+                                    messageFetched.getMultimedia());
+
+                        }});
+            switch(messageFetched.getMultimedia().substring(0, messageFetched.getMultimedia().lastIndexOf("/"))) {
+                case "images":
+                    imageAttachmentPreview.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_gallery_dark));
                     break;
                 case "files":
                     imageAttachmentPreview.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_file_download));
@@ -181,8 +216,7 @@ public class ChatRoomAdapter extends BaseAdapter {
                     imageAttachmentPreview.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_play_video));
                     break;
             }
-        }
-
+                 }
         message.setText(messageContent);
         Date date = new Date(messageTimestamp);
         Format format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -199,9 +233,13 @@ public class ChatRoomAdapter extends BaseAdapter {
         private Button btnDownload;
         private Message message;
         private String fileDownloadedPath;
+        private ProgressBar progressBar;
+        private Context context;
 
-        public DownloadFile(Button btnDoownload, Message message) {
+        public DownloadFile(Context context, Button btnDoownload, ProgressBar progressBar,Message message) {
+            this.context = context;
             this.btnDownload = btnDoownload;
+            this.progressBar = progressBar;
             this.message = message;
         }
 
@@ -209,24 +247,9 @@ public class ChatRoomAdapter extends BaseAdapter {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            //progressBar.setProgress(0);
-            //if (multimedia != null) {
-            //    progressBar.setVisibility(View.VISIBLE);
-            //}
-            //if (multimedia != null ) {
-            //    fabSend.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_cloud_up));
-            //    Toast.makeText(ChatRoomActivity.this, "Starting download", Toast.LENGTH_SHORT).show();
-
-            //}
-        }
-
-        @Override
-        protected void onProgressUpdate(Float... values) {
-            super.onProgressUpdate(values);
-            int p = Math.round(values[0]);
-            Log.i("PROGRESS INT", Integer.toString(p));
-
-            //progressBar.setProgress(p);
+            progressBar.setVisibility(View.VISIBLE);
+            progressBar.setProgress(10);
+            btnDownload.setVisibility(View.GONE);
         }
 
         @Override
@@ -235,13 +258,17 @@ public class ChatRoomAdapter extends BaseAdapter {
             //progressBar.setVisibility(View.GONE);
             //imageAttachment.setVisibility(View.GONE);
             //editMessage.setText("");
-            btnDownload.setText("Downloaded");
             message.setMultimediaPath(fileDownloadedPath);
 
+        }
 
-            Log.i("FILE DOWNLOADES", fileDownloadedPath);
-            //fabSend.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_send_dark));
+        @Override
+        protected void onProgressUpdate(Float... values) {
+            super.onProgressUpdate(values);
+            int p = Math.round(values[0]);
+            Log.i("PROGRESS INT", Integer.toString(p));
 
+            progressBar.setProgress(p);
         }
 
         @Override
@@ -258,7 +285,6 @@ public class ChatRoomAdapter extends BaseAdapter {
             if (multimediaFile != null) {
                 StorageReference islandRef = mStorageRef.child(multimediaFile);
                 Log.i("STORAGE PATH", multimediaFile);
-                final long TEN_MEGABYTE = 1048576 * 1048576;
                 fileDownloadedPath = "-";
                 StorageReference riversRef = mStorageRef.child(multimediaFile);
                 String ABSOLUTE_STORAGE_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString();
@@ -267,20 +293,34 @@ public class ChatRoomAdapter extends BaseAdapter {
                     final File localFile = new File(ABSOLUTE_STORAGE_PATH+"/memeticaMe/"+multimediaFile.substring(multimediaFile.lastIndexOf("/")+1));
 
                         riversRef.getFile(localFile)
+                                .addOnProgressListener(new OnProgressListener<FileDownloadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onProgress(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                                        @SuppressWarnings("VisibleForTests")  float progress =(float) (taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                                        Log.i("Download is ", progress + "% done");
+                                        publishProgress(progress*90);
+                                    }
+                                })
+
                                 .addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
                                     @Override
                                     public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
                                         // Successfully downloaded data to local file
                                         // ...
-                                        //Bitmap bitmapSlected = BitmapFactory.decodeFile(localFile.getPath());
-                                        //btnDownload.setText(localFile.getPath());
-                                        Log.i("DOWNLOADDD",localFile.getPath());
+                                        ((ChatRoomActivity)context).runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                btnDownload.setText("Open");
+                                                btnDownload.setVisibility(View.VISIBLE);
+                                                progressBar.setVisibility(View.GONE);
+                                            }
+                                        });
+
+
                                         btnDownload.setOnClickListener(new View.OnClickListener() {
                                             @Override
                                             public void onClick(View view) {
 
-                                                Log.i("CLICKECCCC","iehuiewhk");
-                                                Log.i("CLICKECCCC",multimediaFile.substring(0, multimediaFile.lastIndexOf("/")));
                                                 switch(multimediaFile.substring(0, multimediaFile.lastIndexOf("/"))){
                                                     case "images":
                                                         Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -304,13 +344,34 @@ public class ChatRoomAdapter extends BaseAdapter {
                                                         break;
 
                                                     case "audios":
-                                                        Intent intent2 = new Intent(Intent.ACTION_VIEW);
-                                                        String title2 = context.getResources().getString(R.string.hello_blank_fragment);
-                                                        intent2.setDataAndType(Uri.parse(
-                                                                Uri.fromFile(new File(localFile.getPath())).toString()), "audio/*");
-                                                        Intent chooser2 = Intent.createChooser(intent2, title2);
-                                                        if (chooser2.resolveActivity(context.getPackageManager()) != null) {
-                                                            context.startActivity(chooser2);
+
+                                                        MediaPlayer mediaPlayer = new MediaPlayer();
+                                                        mediaPlayer.setOnPreparedListener(
+                                                                new MediaPlayer.OnPreparedListener() {
+                                                                    @Override
+                                                                    public void onPrepared(MediaPlayer mediaPlayer) {
+                                                                        mediaPlayer.start();
+                                                                    }
+                                                                });
+                                                        try {
+                                                            mediaPlayer.setDataSource(context,
+                                                                    Uri.parse(localFile.getPath()));
+                                                            mediaPlayer.prepareAsync();
+                                                        } catch (IOException e) {
+                                                            e.printStackTrace();
+                                                        }
+                                                        break;
+
+                                                    case "files":
+                                                        String ext = localFile.getPath().substring(localFile.getPath().lastIndexOf(".")+1);
+
+                                                        Intent intent3 = new Intent(Intent.ACTION_VIEW);
+                                                        String title3 = context.getResources().getString(R.string.hello_blank_fragment);
+                                                        intent3.setDataAndType(Uri.parse(
+                                                                Uri.fromFile(new File(localFile.getPath())).toString()), "application/pdf");
+                                                        Intent chooser3 = Intent.createChooser(intent3, title3);
+                                                        if (chooser3.resolveActivity(context.getPackageManager()) != null) {
+                                                            context.startActivity(chooser3);
                                                         }
                                                         break;
 
@@ -340,5 +401,39 @@ public class ChatRoomAdapter extends BaseAdapter {
             return null;
         }
     }
+    public void startPlaying(MediaPlayer mPlayer, String filePath){
+        try {
+            mPlayer.setDataSource(filePath);
+            mPlayer.prepare();
+            mPlayer.start();
+        } catch (Exception ex) {
+        }
+    }
+    private void stopPlaying(MediaPlayer mediaPlayer) {
+        Log.d("PLAYING", "stopPlaying: ");
+        try {
+            if (mediaPlayer != null) {
+                if (mediaPlayer.isPlaying())
+                    mediaPlayer.stop();
+                mediaPlayer.release();
+                mediaPlayer = null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void onPlay(boolean start, MediaPlayer mediaPlayer, String mPath) {
+        if (start) {
+            Log.i("PLAYING", "TRUE");
+            mediaPlayer = new MediaPlayer();
+            startPlaying(mediaPlayer, mPath);
+        } else {
+            Log.i("PLAYING", "FALSE");
+            stopPlaying(mediaPlayer);
+            //mediaPlayer = new MediaPlayer();
+        }
+    }
+
 
 }

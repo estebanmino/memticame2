@@ -47,6 +47,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.memeticame.memeticame.R;
@@ -200,12 +201,13 @@ public class ChatRoomActivity extends AppCompatActivity {
                         mPath = audioMultimedia;
                         imageAttachment.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_play_audio));
                         imageAttachment.setVisibility(View.VISIBLE);
+                        Log.i("START REOCRDING", "OEJOWIEHOIWHOEIFHWOI");
 
                     }
                 } else {
                     getRecorAudioPermissions();
                 }
-                return true;
+                return false;
             }
         });
 
@@ -215,6 +217,7 @@ public class ChatRoomActivity extends AppCompatActivity {
                 if (ContextCompat.checkSelfPermission(ChatRoomActivity.this,
                         Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
                     stopRecording();
+                    Log.i("STOP REOCRDING", "OEJOWIEHOIWHOEIFHWOI");
                 } else {}
             }
         });
@@ -299,7 +302,7 @@ public class ChatRoomActivity extends AppCompatActivity {
         isRecording = false;
         mRecorder.stop();
         mRecorder.release();
-        //mRecorder = null;
+        mRecorder = null;
         //lesson.getMultimediaAudiosFiles().add(new MultimediaFile("AUDIO",mRecordFileName, transferUtility, S3_BUCKET_NAME));
     }
 
@@ -953,6 +956,8 @@ public class ChatRoomActivity extends AppCompatActivity {
             if (multimedia != null) {
                 progressBar.setVisibility(View.VISIBLE);
             }
+            imageAttachment.setVisibility(View.GONE);
+            editMessage.setText("");
             if (multimedia != null ) {
                 fabSend.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_cloud_up));
                 Toast.makeText(ChatRoomActivity.this, "Starting upload", Toast.LENGTH_SHORT).show();
@@ -972,17 +977,6 @@ public class ChatRoomActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Integer integer) {
             super.onPostExecute(integer);
-            progressBar.setVisibility(View.GONE);
-            imageAttachment.setVisibility(View.GONE);
-            editMessage.setText("");
-            if (multimedia != null ) {
-                fabSend.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_cloud_ready));
-
-                Toast.makeText(ChatRoomActivity.this, "Upload finished", Toast.LENGTH_SHORT).show();
-
-            }
-            fabSend.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_send_dark));
-
         }
 
         @Override
@@ -1006,11 +1000,82 @@ public class ChatRoomActivity extends AppCompatActivity {
                 publishProgress(30f);
                 riversRef.putFile(file)
 
+                        .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                                @SuppressWarnings("VisibleForTests")  float progress =(float) (taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                                Log.i("Upload is ", progress + "% done");
+                                publishProgress(70f * progress);
+                            }
+                        })
                         .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                             @Override
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                 // Get a URL to the uploaded content
-                                @SuppressWarnings("VisibleForTests") Uri downloadUrl = taskSnapshot.getDownloadUrl();
+
+                                final String uuidMessage = UUID.randomUUID().toString();
+                                DatabaseReference userContactsReference = mDatabase.getReference("users/"+
+                                        currentUserPhone+"/contacts");
+                                userContactsReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        if (dataSnapshot.hasChild(receiverPhone)) {
+                                            final String referencePath = "chatRooms/"+dataSnapshot.
+                                                    child(receiverPhone).getValue().toString()+"/messages/"+uuidMessage;
+
+                                            final DatabaseReference contentReference =
+                                                    mDatabase.getReference(referencePath+"/content");
+                                            final DatabaseReference authorReference =
+                                                    mDatabase.getReference(referencePath+"/author");
+                                            final DatabaseReference timestampReference =
+                                                    mDatabase.getReference(referencePath+"/timestamp");
+                                            final DatabaseReference multimediaReference =
+                                                    mDatabase.getReference(referencePath+"/multimedia");
+                                            Log.i("PROGRESS","60");
+                                            publishProgress(60f);
+
+
+                                            contentReference.setValue(content);
+                                            authorReference.setValue(currentUserPhone);
+                                            Log.i("PROGRESS","80");
+                                            publishProgress(80f);
+
+
+                                            if (multimediaFile!= null) {
+                                                multimediaReference.setValue(multimediaFile);
+                                            } else {
+                                                multimediaReference.setValue(null);
+                                            }
+                                            Date date = new Date();
+                                            long timestamp =  date.getTime();
+                                            timestampReference.setValue(timestamp);
+                                            Log.i("PROGRESS","100");
+                                            publishProgress(100f);
+
+
+                                        }
+                                    }
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+                                    }
+                                });
+
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(ChatRoomActivity.this, "Upload finished", Toast.LENGTH_SHORT).show();
+
+                                        if (multimedia != null ) {
+                                            fabSend.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_cloud_ready));
+
+                                            Toast.makeText(ChatRoomActivity.this, "Upload finished", Toast.LENGTH_SHORT).show();
+
+                                        }
+                                        fabSend.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_send_dark));
+                                        multimedia = null;
+                                    }
+                                });
+                                publishProgress(100f);
                             }
                         })
                         .addOnFailureListener(new OnFailureListener() {
@@ -1018,56 +1083,70 @@ public class ChatRoomActivity extends AppCompatActivity {
                             public void onFailure(@NonNull Exception exception) {
                                 // Handle unsuccessful uploads
                                 // ...
+                                Toast.makeText(ChatRoomActivity.this, "Upload file failed, retry again", Toast.LENGTH_LONG).show();
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+
+                                        if (multimedia != null ) {
+                                            fabSend.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_cloud_ready));
+
+                                            Toast.makeText(ChatRoomActivity.this, "Upload finished", Toast.LENGTH_SHORT).show();
+
+                                        }
+                                        fabSend.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_send_dark));
+                                        multimedia = null;
+                                    }
+                                });
+
                             }
                         });
-            }
-            Log.i("PROGRESS","50");
-            publishProgress(50f);
+            } else {
+                final String uidMessage = UUID.randomUUID().toString();
 
-            final String uuidMessage = UUID.randomUUID().toString();
-            currentUserContactsReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.hasChild(receiverPhone)) {
-                        final String referencePath = "chatRooms/"+dataSnapshot.
-                                child(receiverPhone).getValue().toString()+"/messages/"+uuidMessage;
+                currentUserContactsReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.hasChild(receiverPhone)) {
+                            final String referencePath = "chatRooms/"+dataSnapshot.
+                                    child(receiverPhone).getValue().toString()+"/messages/"+uidMessage;
 
-                        final DatabaseReference contentReference =
-                                mDatabase.getReference(referencePath+"/content");
-                        final DatabaseReference authorReference =
-                                mDatabase.getReference(referencePath+"/author");
-                        final DatabaseReference timestampReference =
-                                mDatabase.getReference(referencePath+"/timestamp");
-                        final DatabaseReference multimediaReference =
-                                mDatabase.getReference(referencePath+"/multimedia");
-                        Log.i("PROGRESS","60");
-                        publishProgress(60f);
+                            final DatabaseReference contentReference =
+                                    mDatabase.getReference(referencePath+"/content");
+                            final DatabaseReference authorReference =
+                                    mDatabase.getReference(referencePath+"/author");
+                            final DatabaseReference timestampReference =
+                                    mDatabase.getReference(referencePath+"/timestamp");
+                            final DatabaseReference multimediaReference =
+                                    mDatabase.getReference(referencePath+"/multimedia");
+                            Log.i("PROGRESS","60");
+                            publishProgress(60f);
 
 
-                        contentReference.setValue(content);
-                        authorReference.setValue(currentUserPhone);
-                        Log.i("PROGRESS","80");
-                        publishProgress(80f);
+                            contentReference.setValue(content);
+                            authorReference.setValue(currentUserPhone);
+                            Log.i("PROGRESS","80");
+                            publishProgress(80f);
 
 
-                        if (multimediaFile!= null) {
-                            multimediaReference.setValue(multimediaFile);
-                        } else {
-                            multimediaReference.setValue(null);
+                            if (multimediaFile!= null) {
+                                multimediaReference.setValue(multimediaFile);
+                            } else {
+                                multimediaReference.setValue(null);
+                            }
+                            Date date = new Date();
+                            long timestamp =  date.getTime();
+                            timestampReference.setValue(timestamp);
+                            Log.i("PROGRESS","100");
+                            publishProgress(100f);
+                            editMessage.setText("");
                         }
-                        Date date = new Date();
-                        long timestamp =  date.getTime();
-                        timestampReference.setValue(timestamp);
-                        Log.i("PROGRESS","100");
-                        publishProgress(100f);
-
-
                     }
-                }
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                }
-            });
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                    }
+                });
+            }
             return null;
         }
     }
