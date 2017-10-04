@@ -56,7 +56,9 @@ import com.memeticame.memeticame.models.Message;
 import com.memeticame.memeticame.models.SendMessage;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -951,6 +953,11 @@ public class ChatRoomActivity extends AppCompatActivity {
             if (multimedia != null) {
                 progressBar.setVisibility(View.VISIBLE);
             }
+            if (multimedia != null ) {
+                fabSend.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_cloud_up));
+                Toast.makeText(ChatRoomActivity.this, "Starting upload", Toast.LENGTH_SHORT).show();
+
+            }
         }
 
         @Override
@@ -968,6 +975,13 @@ public class ChatRoomActivity extends AppCompatActivity {
             progressBar.setVisibility(View.GONE);
             imageAttachment.setVisibility(View.GONE);
             editMessage.setText("");
+            if (multimedia != null ) {
+                fabSend.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_cloud_ready));
+
+                Toast.makeText(ChatRoomActivity.this, "Upload finished", Toast.LENGTH_SHORT).show();
+
+            }
+            fabSend.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_send_dark));
 
         }
 
@@ -983,11 +997,13 @@ public class ChatRoomActivity extends AppCompatActivity {
             final String content = strings[4];
             DatabaseReference currentUserContactsReference = mDatabase.getReference("users/"+
                     currentUserPhone+"/contacts");
+            publishProgress(10f);
 
             if (multimediaFile != null) {
                 Uri file = Uri.fromFile(new File(filePath));
                 StorageReference riversRef = mStorageRef.child(multimediaFile);
 
+                publishProgress(30f);
                 riversRef.putFile(file)
 
                         .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -1055,4 +1071,6 @@ public class ChatRoomActivity extends AppCompatActivity {
             return null;
         }
     }
+
+
 }

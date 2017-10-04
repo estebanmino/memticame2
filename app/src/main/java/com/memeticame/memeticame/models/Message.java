@@ -13,6 +13,16 @@ public class Message {
     private long timestamp;
     private String multimedia = null;
     private Uri multimediaUrl = null;
+    private String multimediaPath;
+
+    public String getMultimediaPath() {
+        return multimediaPath;
+    }
+
+    public void setMultimediaPath(String multimediaPath) {
+        this.multimediaPath = multimediaPath;
+    }
+
 
     public Uri getMultimediaUrl() {
         return multimediaUrl;
