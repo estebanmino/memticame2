@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -32,6 +33,7 @@ public class InvitationsFragment extends Fragment {
     Database firebaseDatabase;
 
     private ListView invitationsList;
+    private FloatingActionButton fabAddGroupInvitation;
     private InvitationsAdapter invitationsAdapter;
     private ArrayList<Invitation> invitationsArray = new ArrayList<Invitation>();
 
@@ -49,9 +51,20 @@ public class InvitationsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         invitationsList = view.findViewById(R.id.list_invitations);
         invitationsAdapter = new InvitationsAdapter(getActivity(), invitationsArray);
+        fabAddGroupInvitation = view.findViewById(R.id.fab_add_group_invitation);
         invitationsList.setAdapter(invitationsAdapter);
         //requestContactsPermission();
         setInvitationsListener();
+        setFabAddGroupInvitationListener();
+    }
+
+    private void setFabAddGroupInvitationListener(){
+        fabAddGroupInvitation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(NewGroupInvitationActivity.getIntent(getActivity()));
+            }
+        });
     }
 
     public void setInvitationsListener() {

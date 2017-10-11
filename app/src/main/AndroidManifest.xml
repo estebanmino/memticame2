@@ -3,7 +3,6 @@
     package="com.memeticame.memeticame">
 
     <uses-permission android:name="android.permission.READ_CONTACTS" />
-
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
@@ -42,17 +41,20 @@
             </intent-filter>
         </activity>
         <activity android:name=".invitations.InvitationActivity" />
-        <activity android:name=".chats.ChatRoomActivity"/>
+        <activity android:name=".chats.ChatRoomActivity" />
+
         <service android:name=".notifications.MyFirebaseInstanceIdService">
             <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
         <service android:name=".notifications.MyFirebaseMessagingService">
             <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <activity android:name=".invitations.NewGroupInvitationActivity"></activity>
     </application>
 
 </manifest>

@@ -150,6 +150,29 @@ public class Database {
         */
     }
 
+    public void createChatRoomGroup(final String currentUserPhone, final String groupName) {
+
+
+        String uuidChatRoom = UUID.randomUUID().toString();
+
+        DatabaseReference myUserPhoneReference =
+                mDatabase.getReference("users/" + currentUserPhone + "/chatRooms/" + groupName);
+        myUserPhoneReference.setValue(uuidChatRoom);
+
+        final DatabaseReference usersReference =
+                mDatabase.getReference("chatRooms/"+uuidChatRoom+"/users/");
+        usersReference.setValue("{"+currentUserPhone+"}");
+
+        /*
+        final DatabaseReference firstUserReference =
+                mDatabase.getReference("chatRooms/"+uuidChatRoom+"/firstUser/");
+        firstUserReference.setValue(currentUserPhone);
+        final DatabaseReference secondUserReference =
+                mDatabase.getReference("chatRooms/"+uuidChatRoom+"/secondUser/");
+        secondUserReference.setValue(invitationPhone);
+        */
+    }
+
     public void rejectInvitation(final String uid, final String currentUserPhone, final String invitationPhone) {
 
         DatabaseReference invitationReference =

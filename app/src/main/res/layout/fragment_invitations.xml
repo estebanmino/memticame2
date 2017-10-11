@@ -1,4 +1,5 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -8,5 +9,26 @@
         android:id="@+id/list_invitations"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <FrameLayout
+        android:id="@+id/fragment_inflate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|right"
+        android:layout_marginBottom="66dp"
+        android:layout_marginEnd="16dp"
+        >
+
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab_add_group_invitation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:clickable="true"
+            android:elevation="5dp"
+            android:src="@android:drawable/ic_menu_search"
+            app:fabSize="normal" />
+    </FrameLayout>
 
 </FrameLayout>
