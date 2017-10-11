@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.memeticame.memeticame.MainActivity;
 import com.memeticame.memeticame.R;
 import com.memeticame.memeticame.models.Contact;
 import com.memeticame.memeticame.models.Database;
@@ -61,6 +62,7 @@ public class InvitationActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 database.sendInvitation(inviteContact.getPhone(), editMessage.getText().toString(), currentUserPhone);
+                MainActivity.getIntent(InvitationActivity.this);
             }
         });
     }
