@@ -43,12 +43,12 @@
         </activity>
         <activity android:name=".invitations.InvitationActivity" />
         <activity android:name=".chats.ChatRoomActivity"/>
-        <service android:name=".chats.notifications.MyFirebaseInstanceIdService">
+        <service android:name=".notifications.MyFirebaseInstanceIdService">
             <intent-filter>
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
             </intent-filter>
         </service>
-        <service android:name=".chats.notifications.MyFirebaseMessagingService">
+        <service android:name=".notifications.MyFirebaseMessagingService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>

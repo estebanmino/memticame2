@@ -53,7 +53,7 @@ import static android.R.attr.targetActivity;
  * Created by ESTEBANFML on 02-10-2017.
  */
 
-public class ChatRoomAdapter extends BaseAdapter {
+public class MessagesAdapter extends BaseAdapter {
     private final Context context;
     private final ArrayList<Message> messagesList;
     private final FirebaseAuth mAuth;
@@ -65,7 +65,7 @@ public class ChatRoomAdapter extends BaseAdapter {
     private static final int VIEW_TYPE_MESSAGE_RECEIVED = 2;
 
 
-    public ChatRoomAdapter(Context context, ArrayList<Message> messagesList, FirebaseAuth mAuth, String currentUserPhone) {
+    public MessagesAdapter(Context context, ArrayList<Message> messagesList, FirebaseAuth mAuth, String currentUserPhone) {
         this.context = context;
         this.messagesList = messagesList;
         this.mAuth = mAuth;

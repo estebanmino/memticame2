@@ -54,12 +54,9 @@ import com.memeticame.memeticame.R;
 import com.memeticame.memeticame.models.Contact;
 import com.memeticame.memeticame.models.Database;
 import com.memeticame.memeticame.models.Message;
-import com.memeticame.memeticame.models.SendMessage;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -91,10 +88,11 @@ public class ChatRoomActivity extends AppCompatActivity {
     private static final String KEY_USERNAME = "username";
     private static final String KEY_PHONE = "phone";
     private static final String KEY_CHAT_ROOM_UUID = "chatRoomUuid";
+    private static final String USER_CHAT_ROOMS = "chatRooms";
 
     private final Database firebaseDatabase = new Database();
     private final ArrayList<Message> messagesList = new ArrayList<>();
-    private  ChatRoomAdapter chatRoomAdapter;
+    private MessagesAdapter chatRoomAdapter;
 
     private FloatingActionButton fabSend;
     private EditText editMessage;
@@ -168,7 +166,7 @@ public class ChatRoomActivity extends AppCompatActivity {
         setOnClickImageAddAttachment();
 
         listenSentMessage();
-        chatRoomAdapter  = new ChatRoomAdapter(ChatRoomActivity.this, messagesList,firebaseDatabase.mAuth, currentUserPhone);
+        chatRoomAdapter  = new MessagesAdapter(ChatRoomActivity.this, messagesList,firebaseDatabase.mAuth, currentUserPhone);
 
         listView.setTranscriptMode(ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
         listView.setStackFromBottom(true);
@@ -990,7 +988,7 @@ public class ChatRoomActivity extends AppCompatActivity {
             final String receiverPhone = strings[1];
             final String content = strings[4];
             DatabaseReference currentUserContactsReference = mDatabase.getReference("users/"+
-                    currentUserPhone+"/contacts");
+                    currentUserPhone+"/"+USER_CHAT_ROOMS);
             publishProgress(10f);
 
             if (multimediaFile != null) {
@@ -1015,7 +1013,7 @@ public class ChatRoomActivity extends AppCompatActivity {
 
                                 final String uuidMessage = UUID.randomUUID().toString();
                                 DatabaseReference userContactsReference = mDatabase.getReference("users/"+
-                                        currentUserPhone+"/contacts");
+                                        currentUserPhone+"/"+USER_CHAT_ROOMS);
                                 userContactsReference.addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(DataSnapshot dataSnapshot) {

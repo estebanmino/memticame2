@@ -10,6 +10,7 @@ import android.widget.TextView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 import com.memeticame.memeticame.R;
+import com.memeticame.memeticame.models.ChatRoom;
 import com.memeticame.memeticame.models.Contact;
 
 import java.util.ArrayList;
@@ -18,12 +19,12 @@ import java.util.ArrayList;
  * Created by ESTEBANFML on 02-10-2017.
  */
 
-public class ChatsContactsAdapter extends BaseAdapter {
+public class ChatRoomsAdapter extends BaseAdapter {
     private final Context context;
     private final ArrayList<Contact> arrayList;
     private FirebaseDatabase database = FirebaseDatabase.getInstance();
 
-    public ChatsContactsAdapter(Context context, ArrayList<Contact> arrayList, FirebaseAuth mAuth) {
+    public ChatRoomsAdapter(Context context, ArrayList<Contact> arrayList, FirebaseAuth mAuth) {
         this.context = context;
         this.arrayList = arrayList;
     }

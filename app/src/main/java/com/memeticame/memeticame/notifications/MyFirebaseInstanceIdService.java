@@ -1,4 +1,4 @@
-package com.memeticame.memeticame.chats.notifications;
+package com.memeticame.memeticame.notifications;
 
 import android.util.Log;
 
@@ -19,6 +19,5 @@ public class MyFirebaseInstanceIdService extends FirebaseInstanceIdService {
         String refreshedToken = FirebaseInstanceId.getInstance().getToken();
         Log.i(TAG, "Refreshed token: " + refreshedToken);
 
-        // If you want
     }
 }

@@ -122,11 +122,11 @@ public class Database {
 
         String uuidChatRoom = UUID.randomUUID().toString();
         DatabaseReference myUserPhoneReference =
-                mDatabase.getReference("users/" + currentUserPhone + "/contacts/" + invitationPhone);
+                mDatabase.getReference("users/" + currentUserPhone + "/chatRooms/" + invitationPhone);
         myUserPhoneReference.setValue(uuidChatRoom);
 
         DatabaseReference contactUserPhoneReference =
-                mDatabase.getReference("users/" + invitationPhone + "/contacts/" + currentUserPhone);
+                mDatabase.getReference("users/" + invitationPhone + "/chatRooms/" + currentUserPhone);
         contactUserPhoneReference.setValue(uuidChatRoom);
 
         DatabaseReference invitationReference =
@@ -136,12 +136,18 @@ public class Database {
         final DatabaseReference chatRoomReference =
                 mDatabase.getReference("chatRooms/"+uuidChatRoom);
 
+        final DatabaseReference usersReference =
+                mDatabase.getReference("chatRooms/"+uuidChatRoom+"/users/");
+        usersReference.setValue("{"+currentUserPhone+","+invitationPhone+"}");
+
+        /*
         final DatabaseReference firstUserReference =
                 mDatabase.getReference("chatRooms/"+uuidChatRoom+"/firstUser/");
         firstUserReference.setValue(currentUserPhone);
         final DatabaseReference secondUserReference =
                 mDatabase.getReference("chatRooms/"+uuidChatRoom+"/secondUser/");
         secondUserReference.setValue(invitationPhone);
+        */
     }
 
     public void rejectInvitation(final String uid, final String currentUserPhone, final String invitationPhone) {

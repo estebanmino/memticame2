@@ -20,6 +20,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.memeticame.memeticame.chats.ChatRoomsFragment;
 import com.memeticame.memeticame.contacts.ContactsFragment;
 import com.memeticame.memeticame.invitations.InvitationsFragment;
 
@@ -96,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
             // Return a PlaceholderFragment (defined as a static inner class below).
             switch (position) {
                 case 0:
-                    return new ChatsFragment();
+                    return new ChatRoomsFragment();
 
                 case 1:
                     //

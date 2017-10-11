@@ -1,14 +1,11 @@
-package com.memeticame.memeticame.chats.notifications;
+package com.memeticame.memeticame.notifications;
 
-import android.app.Notification;
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
-import com.memeticame.memeticame.MainActivity;
 
 /**
  * Created by ESTEBANFML on 03-10-2017.
