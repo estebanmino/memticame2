@@ -89,10 +89,14 @@ public class ChatRoomsFragment extends Fragment {
                         if (dataSnapshot.child(phoneChatRooms.get(position).getPhone()) != null){
                             String chatRoomUid = dataSnapshot.child(
                                     phoneChatRooms.get(position).getPhone()).getValue().toString();
-                            startActivity(ChatRoomActivity.getIntent(getActivity(),
+                            Log.i("ISGROUPONTOUCH", phoneChatRooms.get(position).getIsGroup());
+                            startActivity(
+                                    ChatRoomActivity.getIntent(
+                                            getActivity(),
                                     phoneChatRooms.get(position).getName(),
                                     phoneChatRooms.get(position).getPhone(),
-                                    chatRoomUid));
+                                    chatRoomUid,
+                                            phoneChatRooms.get(position).getIsGroup()));
                         }
                     }
 
@@ -118,6 +122,7 @@ public class ChatRoomsFragment extends Fragment {
                     String chat_room_name = chatRoomInfo.getKey().toString();
                     if (myPhoneContactsNumbers.contains(chat_room_name)) {
                         int index = myPhoneContactsNumbers.indexOf(chat_room_name);
+                        myPhoneContacts.get(index).setIsGroup("false");
                         phoneChatRooms.add(myPhoneContacts.get(index));
                     }
                     else {
@@ -127,6 +132,7 @@ public class ChatRoomsFragment extends Fragment {
                         unknownContact.setEmail(chat_room_name);
                         unknownContact.setName(chat_room_name);
                         unknownContact.setPhone(chat_room_name);
+                        unknownContact.setIsGroup("true");
                         phoneChatRooms.add(unknownContact);
                     }
                 }

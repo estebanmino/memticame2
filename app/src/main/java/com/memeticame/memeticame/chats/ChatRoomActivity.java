@@ -79,6 +79,8 @@ public class ChatRoomActivity extends AppCompatActivity {
     private static final String KEY_USERNAME = "username";
     private static final String KEY_PHONE = "phone";
     private static final String KEY_CHAT_ROOM_UUID = "chatRoomUuid";
+    private static final String KEY_IS_GROUP = "isGroup";
+
     private static final String APP_DIRECTORY = "memeticaMe";
     private static final String IMAGE_FORMAT = ".jpg";
     private static final String VIDEO_FORMAT = ".mp4";
@@ -113,12 +115,6 @@ public class ChatRoomActivity extends AppCompatActivity {
 
     private String author;
     private String multimedia;
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_chat_room, menu);
-        return true;
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -176,6 +172,14 @@ public class ChatRoomActivity extends AppCompatActivity {
         setOnClickFabFiles();
         setOnClickFabImages();
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        if (getIntent().getStringExtra(KEY_IS_GROUP).equals("true"))
+            getMenuInflater().inflate(R.menu.menu_chat_room, menu);
+        return true;
     }
 
     public void setOnClickFabAudio(){
@@ -522,10 +526,10 @@ public class ChatRoomActivity extends AppCompatActivity {
         if (item.getItemId() == android.R.id.home) {
             finish();
         }
-        else if (item.getItemId() == R.id.action_add_member) {
-            //InvitationActivity.getIntent(ChatRoomActivity.this);
-
+        else if (item.getItemId() == R.id.action_add_contact) {
+            finish();
         }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -718,11 +722,12 @@ public class ChatRoomActivity extends AppCompatActivity {
         }
     }
 
-    public static Intent getIntent(Context context, String name, String phone, String chatRoomUuid) {
+    public static Intent getIntent(Context context, String name, String phone, String chatRoomUuid, String isGroup) {
         Intent intent = new Intent(context,ChatRoomActivity.class);
         intent.putExtra(KEY_USERNAME,name);
         intent.putExtra(KEY_PHONE,phone);
         intent.putExtra(KEY_CHAT_ROOM_UUID,chatRoomUuid);
+        intent.putExtra(KEY_IS_GROUP,isGroup);
         return intent;
     }
 

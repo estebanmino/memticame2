@@ -13,6 +13,7 @@ public class Contact {
     private String name;
     private String id;
     private HashMap<String, String> contacts = null;
+    private String isGroup;
 
     public String getName() {
         return name;
@@ -21,6 +22,16 @@ public class Contact {
     public void setName(String name) {
         this.name = name;
     }
+
+
+    public String getIsGroup() {
+        return isGroup;
+    }
+
+    public void setIsGroup(String isGroup) {
+        this.isGroup = isGroup;
+    }
+
 
     public String getId() {
         return id;
