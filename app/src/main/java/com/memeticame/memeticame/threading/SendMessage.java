@@ -105,6 +105,7 @@ public class SendMessage extends AsyncTask<String,Float,Integer> {
         final String filePath = strings[3];
         final String receiverPhone = strings[1];
         final String content = strings[4];
+
         DatabaseReference currentUserContactsReference = mDatabase.getReference("users/"+
                 currentUserPhone+"/"+USER_CHAT_ROOMS);
         publishProgress(10f);
@@ -125,8 +126,7 @@ public class SendMessage extends AsyncTask<String,Float,Integer> {
                     })
                     .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override
-                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            // Get a URL to the uploaded content
+                        public void onSuccess(final UploadTask.TaskSnapshot taskSnapshot) {
 
                             final String uuidMessage = UUID.randomUUID().toString();
                             DatabaseReference userContactsReference = mDatabase.getReference("users/"+
@@ -138,30 +138,17 @@ public class SendMessage extends AsyncTask<String,Float,Integer> {
                                         final String referencePath = "chatRooms/"+dataSnapshot.
                                                 child(receiverPhone).getValue().toString()+"/messages/"+uuidMessage;
 
-                                        final DatabaseReference contentReference =
-                                                mDatabase.getReference(referencePath+"/content");
-                                        final DatabaseReference authorReference =
-                                                mDatabase.getReference(referencePath+"/author");
-                                        final DatabaseReference timestampReference =
-                                                mDatabase.getReference(referencePath+"/timestamp");
                                         final DatabaseReference multimediaReference =
                                                 mDatabase.getReference(referencePath+"/multimedia");
-                                        publishProgress(60f);
+                                        final DatabaseReference multimediaSizeReference =
+                                                mDatabase.getReference(referencePath+"/multimediaSize");
 
+                                        sendTextMessage(uuidMessage,currentUserPhone,receiverPhone,content);
 
-                                        contentReference.setValue(content);
-                                        authorReference.setValue(currentUserPhone);
-                                        publishProgress(80f);
-
-
-                                        if (multimediaFile!= null) {
-                                            multimediaReference.setValue(multimediaFile);
-                                        } else {
-                                            multimediaReference.setValue(null);
-                                        }
-                                        Date date = new Date();
-                                        long timestamp =  date.getTime();
-                                        timestampReference.setValue(timestamp);
+                                        multimediaReference.setValue(multimediaFile);
+                                        @SuppressWarnings("VisibleForTests") String size =
+                                                humanReadableByteCount(taskSnapshot.getTotalByteCount(),true);
+                                        multimediaSizeReference.setValue(size);
                                         publishProgress(100f);
                                     }
                                 }
@@ -212,44 +199,58 @@ public class SendMessage extends AsyncTask<String,Float,Integer> {
         } else {
             final String uidMessage = UUID.randomUUID().toString();
 
-            currentUserContactsReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.hasChild(receiverPhone)) {
-                        final String referencePath = "chatRooms/"+dataSnapshot.
-                                child(receiverPhone).getValue().toString()+"/messages/"+uidMessage;
-
-                        final DatabaseReference contentReference =
-                                mDatabase.getReference(referencePath+"/content");
-                        final DatabaseReference authorReference =
-                                mDatabase.getReference(referencePath+"/author");
-                        final DatabaseReference timestampReference =
-                                mDatabase.getReference(referencePath+"/timestamp");
-                        final DatabaseReference multimediaReference =
-                                mDatabase.getReference(referencePath+"/multimedia");
-                        publishProgress(60f);
-
-                        contentReference.setValue(content);
-                        authorReference.setValue(currentUserPhone);
-                        publishProgress(80f);
-
-                        if (multimediaFile!= null) {
-                            multimediaReference.setValue(multimediaFile);
-                        } else {
-                            multimediaReference.setValue(null);
-                        }
-                        Date date = new Date();
-                        long timestamp =  date.getTime();
-                        timestampReference.setValue(timestamp);
-                        publishProgress(100f);
-                        editMessage.setText("");
-                    }
-                }
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                }
-            });
+            sendTextMessage(uidMessage, currentUserPhone, receiverPhone, content);
         }
+        publishProgress(100f);
+
         return null;
+    }
+
+    public void sendTextMessage(final String uidMessage,final String currentUserPhone, final String receiverPhone,
+                                final String content){
+        DatabaseReference currentUserContactsReference = mDatabase.getReference("users/"+
+                currentUserPhone+"/"+USER_CHAT_ROOMS);
+
+        currentUserContactsReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.hasChild(receiverPhone)) {
+                    final String referencePath = "chatRooms/"+dataSnapshot.
+                            child(receiverPhone).getValue().toString()+"/messages/"+uidMessage;
+
+                    final DatabaseReference contentReference =
+                            mDatabase.getReference(referencePath+"/content");
+                    final DatabaseReference authorReference =
+                            mDatabase.getReference(referencePath+"/author");
+                    final DatabaseReference timestampReference =
+                            mDatabase.getReference(referencePath+"/timestamp");
+
+                    publishProgress(60f);
+
+                    contentReference.setValue(content);
+                    authorReference.setValue(currentUserPhone);
+                    publishProgress(80f);
+
+
+                    Date date = new Date();
+                    long timestamp =  date.getTime();
+                    timestampReference.setValue(timestamp);
+                    editMessage.setText("");
+                    publishProgress(100f);
+
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+    }
+
+    public static String humanReadableByteCount(long bytes, boolean si) {
+        int unit = si ? 1000 : 1024;
+        if (bytes < unit) return bytes + " B";
+        int exp = (int) (Math.log(bytes) / Math.log(unit));
+        String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp-1) + (si ? "" : "i");
+        return String.format("%.0f %sB", bytes / Math.pow(unit, exp), pre);
     }
 }

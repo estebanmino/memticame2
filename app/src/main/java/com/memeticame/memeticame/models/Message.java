@@ -14,6 +14,16 @@ public class Message {
     private String multimedia = null;
     private Uri multimediaUrl = null;
     private String multimediaPath;
+    private String multimediaSize;
+
+
+    public String getMultimediaSize() {
+        return multimediaSize;
+    }
+
+    public void setMultimediaSize(String multimediaSize) {
+        this.multimediaSize = multimediaSize;
+    }
 
     public String getMultimediaPath() {
         return multimediaPath;
@@ -34,6 +44,14 @@ public class Message {
 
     public String getMultimedia() {
         return multimedia;
+    }
+
+    public String getMultimediaName() {
+        return  multimedia.substring(multimedia.lastIndexOf("/") + 1);
+    }
+
+    public String getMultimediaType() {
+        return  multimedia.substring(0, multimedia.lastIndexOf("/"));
     }
 
     public void setMultimedia(String multimedia) {

@@ -113,6 +113,8 @@ public class MessagesAdapter extends BaseAdapter {
             convertView = layoutInflater.inflate(R.layout.chat_message_sent, null);
         }
 
+        final TextView textFileName = convertView.findViewById(R.id.text_file_name);
+        final TextView textFileSize = convertView.findViewById(R.id.text_file_size);
         final TextView message = convertView.findViewById(R.id.text_message_body);
         final TextView timestamp = convertView.findViewById(R.id.text_message_time);
         final TextView senderName = convertView.findViewById(R.id.text_sender_name);
@@ -137,10 +139,11 @@ public class MessagesAdapter extends BaseAdapter {
                 btnDownload.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
+                        String title = context.getResources().getString(R.string.hello_blank_fragment);
+
                         switch (multimediaFile.substring(0, multimediaFile.lastIndexOf("/"))) {
                             case "images":
-                                Intent intent = new Intent(Intent.ACTION_VIEW);
-                                String title = context.getResources().getString(R.string.hello_blank_fragment);
                                 intent.setDataAndType(Uri.parse(
                                         Uri.fromFile(new File(multimediaFile)).toString()), "image/*");
                                 Intent chooser = Intent.createChooser(intent, title);
@@ -149,11 +152,9 @@ public class MessagesAdapter extends BaseAdapter {
                                 }
                                 break;
                             case "videos":
-                                Intent intent1 = new Intent(Intent.ACTION_VIEW);
-                                String title1 = context.getResources().getString(R.string.hello_blank_fragment);
-                                intent1.setDataAndType(Uri.parse(
+                                intent.setDataAndType(Uri.parse(
                                         Uri.fromFile(new File(multimediaFile)).toString()), "video/*");
-                                Intent chooser1 = Intent.createChooser(intent1, title1);
+                                Intent chooser1 = Intent.createChooser(intent, title);
                                 if (chooser1.resolveActivity(context.getPackageManager()) != null) {
                                     context.startActivity(chooser1);
                                 }
@@ -180,12 +181,9 @@ public class MessagesAdapter extends BaseAdapter {
 
                             case "files":
                                 String ext = multimediaFile.substring(multimediaFile.lastIndexOf(".") + 1);
-
-                                Intent intent3 = new Intent(Intent.ACTION_VIEW);
-                                String title3 = context.getResources().getString(R.string.hello_blank_fragment);
-                                intent3.setDataAndType(Uri.parse(
+                                intent.setDataAndType(Uri.parse(
                                         Uri.fromFile(new File(multimediaFile)).toString()), "application/pdf");
-                                Intent chooser3 = Intent.createChooser(intent3, title3);
+                                Intent chooser3 = Intent.createChooser(intent, title);
                                 if (chooser3.resolveActivity(context.getPackageManager()) != null) {
                                     context.startActivity(chooser3);
                                 }
@@ -203,12 +201,16 @@ public class MessagesAdapter extends BaseAdapter {
                                     messageFetched.getMultimedia());
 
                         }});
-            switch(messageFetched.getMultimedia().substring(0, messageFetched.getMultimedia().lastIndexOf("/"))) {
+            switch(messageFetched.getMultimediaType()) {
                 case "images":
                     imageAttachmentPreview.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_gallery_dark));
                     break;
                 case "files":
                     imageAttachmentPreview.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_file_download));
+                    textFileName.setVisibility(View.VISIBLE);
+                    textFileSize.setVisibility(View.VISIBLE);
+                    textFileName.setText(messageFetched.getMultimediaName());
+                    textFileSize.setText(messageFetched.getMultimediaSize());
                     break;
 
                 case "audios":
@@ -261,9 +263,6 @@ public class MessagesAdapter extends BaseAdapter {
         @Override
         protected void onPostExecute(Integer integer) {
             super.onPostExecute(integer);
-            //progressBar.setVisibility(View.GONE);
-            //imageAttachment.setVisibility(View.GONE);
-            //editMessage.setText("");
             message.setMultimediaPath(fileDownloadedPath);
 
         }
@@ -290,7 +289,6 @@ public class MessagesAdapter extends BaseAdapter {
 
             if (multimediaFile != null) {
                 StorageReference islandRef = mStorageRef.child(multimediaFile);
-                Log.i("STORAGE PATH", multimediaFile);
                 fileDownloadedPath = "-";
                 StorageReference riversRef = mStorageRef.child(multimediaFile);
                 String ABSOLUTE_STORAGE_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString();
@@ -326,64 +324,28 @@ public class MessagesAdapter extends BaseAdapter {
                                         btnDownload.setOnClickListener(new View.OnClickListener() {
                                             @Override
                                             public void onClick(View view) {
-
-                                                switch(multimediaFile.substring(0, multimediaFile.lastIndexOf("/"))){
-                                                    case "images":
-                                                        Intent intent = new Intent(Intent.ACTION_VIEW);
-                                                        String title = context.getResources().getString(R.string.hello_blank_fragment);
-                                                        intent.setDataAndType(Uri.parse(
-                                                                Uri.fromFile(new File(localFile.getPath())).toString()), "image/*");
-                                                        Intent chooser = Intent.createChooser(intent, title);
-                                                        if (chooser.resolveActivity(context.getPackageManager()) != null) {
-                                                            context.startActivity(chooser);
-                                                        }
-                                                        break;
-                                                    case "videos":
-                                                        Intent intent1 = new Intent(Intent.ACTION_VIEW);
-                                                        String title1 = context.getResources().getString(R.string.hello_blank_fragment);
-                                                        intent1.setDataAndType(Uri.parse(
-                                                                Uri.fromFile(new File(localFile.getPath())).toString()), "video/*");
-                                                        Intent chooser1 = Intent.createChooser(intent1, title1);
-                                                        if (chooser1.resolveActivity(context.getPackageManager()) != null) {
-                                                            context.startActivity(chooser1);
-                                                        }
-                                                        break;
-
-                                                    case "audios":
-
-                                                        MediaPlayer mediaPlayer = new MediaPlayer();
-                                                        mediaPlayer.setOnPreparedListener(
-                                                                new MediaPlayer.OnPreparedListener() {
-                                                                    @Override
-                                                                    public void onPrepared(MediaPlayer mediaPlayer) {
-                                                                        mediaPlayer.start();
-                                                                    }
-                                                                });
-                                                        try {
-                                                            mediaPlayer.setDataSource(context,
-                                                                    Uri.parse(localFile.getPath()));
-                                                            mediaPlayer.prepareAsync();
-                                                        } catch (IOException e) {
-                                                            e.printStackTrace();
-                                                        }
-                                                        break;
-
-                                                    case "files":
-                                                        String ext = localFile.getPath().substring(localFile.getPath().lastIndexOf(".")+1);
-
-                                                        Intent intent3 = new Intent(Intent.ACTION_VIEW);
-                                                        String title3 = context.getResources().getString(R.string.hello_blank_fragment);
-                                                        intent3.setDataAndType(Uri.parse(
-                                                                Uri.fromFile(new File(localFile.getPath())).toString()), "application/pdf");
-                                                        Intent chooser3 = Intent.createChooser(intent3, title3);
-                                                        if (chooser3.resolveActivity(context.getPackageManager()) != null) {
-                                                            context.startActivity(chooser3);
-                                                        }
-                                                        break;
-
+                                                if (multimediaFile.substring(0, multimediaFile.lastIndexOf("/")) == "audios"){
+                                                    MediaPlayer mediaPlayer = new MediaPlayer();
+                                                    mediaPlayer.setOnPreparedListener(
+                                                            new MediaPlayer.OnPreparedListener() {
+                                                                @Override
+                                                                public void onPrepared(MediaPlayer mediaPlayer) {
+                                                                    mediaPlayer.start();
+                                                                }
+                                                            });
+                                                    try {
+                                                        mediaPlayer.setDataSource(context,
+                                                                Uri.parse(localFile.getPath()));
+                                                        mediaPlayer.prepareAsync();
+                                                    } catch (IOException e) {
+                                                        e.printStackTrace();
+                                                    }
                                                 }
-
-
+                                                else {
+                                                    try {
+                                                        openFile(context, Uri.fromFile(new File(localFile.getPath())), localFile.getPath());
+                                                    } catch (Exception e){}
+                                                }
                                             }
                                         });
 
@@ -438,6 +400,49 @@ public class MessagesAdapter extends BaseAdapter {
             Log.i("PLAYING", "FALSE");
             stopPlaying(mediaPlayer);
             //mediaPlayer = new MediaPlayer();
+        }
+    }
+
+    public static void openFile(Context context, Uri uri, String url) throws IOException {
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        String title = context.getResources().getString(R.string.hello_blank_fragment);
+
+        // so Android knew what application to use to open the file
+        if (url.contains(".doc") || url.contains(".docx")) {
+            // Word document
+            intent.setDataAndType(uri, "application/msword");
+        } else if(url.contains(".pdf")) {
+            // PDF file
+            intent.setDataAndType(uri, "application/pdf");
+        } else if(url.contains(".ppt") || url.contains(".pptx")) {
+            // Powerpoint file
+            intent.setDataAndType(uri, "application/vnd.ms-powerpoint");
+        } else if(url.contains(".xls") || url.contains(".xlsx")) {
+            // Excel file
+            intent.setDataAndType(uri, "application/vnd.ms-excel");
+        } else if(url.contains(".wav") || url.contains(".mp3")) {
+            // WAV audio file
+            intent.setDataAndType(uri, "audio/x-wav");
+        } else if(url.contains(".gif")) {
+            // GIF file
+            intent.setDataAndType(uri, "image/gif");
+        } else if(url.contains(".jpg") || url.contains(".jpeg") || url.contains(".png")) {
+            // JPG file
+            intent.setDataAndType(uri, "image/jpeg");
+        } else if(url.contains(".txt")) {
+            // Text file
+            intent.setDataAndType(uri, "text/plain");
+        } else if(url.contains(".3gp") || url.contains(".mpg") || url.contains(".mpeg") || url.contains(".mpe") || url.contains(".mp4") || url.contains(".avi")) {
+            // Video files
+            intent.setDataAndType(uri, "video/*");
+        } else {
+            intent.setDataAndType(uri, "*/*");
+        }
+
+        Intent chooser = Intent.createChooser(intent, title);
+        if (chooser.resolveActivity(context.getPackageManager()) != null) {
+            context.startActivity(chooser);
         }
     }
 

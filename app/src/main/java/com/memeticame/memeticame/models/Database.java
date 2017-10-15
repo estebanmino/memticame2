@@ -31,9 +31,7 @@ public class Database {
 
     private FirebaseDatabase mDatabase;
     public FirebaseAuth mAuth;
-    public Boolean isMyContactResult = false;
     private StorageReference mStorageRef;
-
 
     public void init() {
         mDatabase = FirebaseDatabase.getInstance();
@@ -41,81 +39,8 @@ public class Database {
         mStorageRef = FirebaseStorage.getInstance().getReference();
     }
 
-    public FirebaseUser getCurrentUser() {
-        return mAuth.getCurrentUser();
-    }
-
     public DatabaseReference getReference(String somewhere) {
         return mDatabase.getReference(somewhere);
-    }
-
-    private void uploadFile(final String multimedia, String filePath) {
-        if (multimedia != null) {
-            Uri file = Uri.fromFile(new File(filePath));
-            StorageReference riversRef = mStorageRef.child(multimedia);
-
-            riversRef.putFile(file)
-                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            // Get a URL to the uploaded content
-                            @SuppressWarnings("VisibleForTests") Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception exception) {
-                            // Handle unsuccessful uploads
-                            // ...
-                        }
-                    });
-        }
-    }
-
-    public boolean sendMessageTo(final String content, final String author, final String multimedia,
-                                 final String receiverPhone, final String filePath) {
-        final String currentUserPhone = author;
-        final String multimediaFile = multimedia;
-        DatabaseReference currentUserContactsReference = mDatabase.getReference("users/"+
-                currentUserPhone+"/contacts");
-
-        uploadFile(multimedia,filePath);
-
-        final String uuidMessage = UUID.randomUUID().toString();
-        currentUserContactsReference.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.hasChild(receiverPhone)) {
-                    final String referencePath = "chatRooms/"+dataSnapshot.
-                            child(receiverPhone).getValue().toString()+"/messages/"+uuidMessage;
-
-                    final DatabaseReference contentReference =
-                            mDatabase.getReference(referencePath+"/content");
-                    final DatabaseReference authorReference =
-                            mDatabase.getReference(referencePath+"/author");
-                    final DatabaseReference timestampReference =
-                            mDatabase.getReference(referencePath+"/timestamp");
-                    final DatabaseReference multimediaReference =
-                            mDatabase.getReference(referencePath+"/multimedia");
-
-
-                    contentReference.setValue(content);
-                    authorReference.setValue(currentUserPhone);
-                    if (multimediaFile!= null) {
-                        multimediaReference.setValue(multimedia);
-                    } else {
-                        multimediaReference.setValue(null);
-                    }
-                    Date date = new Date();
-                    long timestamp =  date.getTime();
-                    timestampReference.setValue(timestamp);
-                }
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-            }
-        });
-        return true;
     }
 
     public void acceptInvitation(final String uid, final String currentUserPhone, final String chatWith, String chatRoomUuid) {
@@ -128,10 +53,6 @@ public class Database {
 
             final DatabaseReference chatRoomReference =
                     mDatabase.getReference("chatRooms/"+chatRoomUuid);
-
-            /*final DatabaseReference usersReference =
-                    mDatabase.getReference("chatRooms/"+chatRoomUuid+"/users/");
-            usersReference.setValue("{"+currentUserPhone+","+chat+"}");*/
         }
 
         DatabaseReference myUserPhoneReference =
@@ -142,19 +63,9 @@ public class Database {
         DatabaseReference invitationReference =
                 mDatabase.getReference("users/" + currentUserPhone + "/invitations/" + uid);
         invitationReference.removeValue();
-
-        /*
-        final DatabaseReference firstUserReference =
-                mDatabase.getReference("chatRooms/"+uuidChatRoom+"/firstUser/");
-        firstUserReference.setValue(currentUserPhone);
-        final DatabaseReference secondUserReference =
-                mDatabase.getReference("chatRooms/"+uuidChatRoom+"/secondUser/");
-        secondUserReference.setValue(invitationPhone);
-        */
     }
 
     public void createChatRoomGroup(final String currentUserPhone, final String groupName, final ArrayList<Contact> invitedContacts) {
-
 
         String uuidChatRoom = UUID.randomUUID().toString();
 
@@ -229,9 +140,6 @@ public class Database {
             public void onCancelled(DatabaseError databaseError) {
             }
         });
-    }
-
-    public void sendNotification(String user, String message) {
     }
 
 }
