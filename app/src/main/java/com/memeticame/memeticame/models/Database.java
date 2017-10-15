@@ -118,27 +118,30 @@ public class Database {
         return true;
     }
 
-    public void acceptInvitation(final String uid, final String currentUserPhone, final String invitationPhone) {
+    public void acceptInvitation(final String uid, final String currentUserPhone, final String chatWith, String chatRoomUuid) {
 
-        String uuidChatRoom = UUID.randomUUID().toString();
+        if (chatRoomUuid == null) {
+            chatRoomUuid = UUID.randomUUID().toString();
+
+            DatabaseReference contactUserPhoneReference = mDatabase.getReference("users/" + chatWith + "/chatRooms/" + currentUserPhone);
+            contactUserPhoneReference.setValue(chatRoomUuid);
+
+            final DatabaseReference chatRoomReference =
+                    mDatabase.getReference("chatRooms/"+chatRoomUuid);
+
+            /*final DatabaseReference usersReference =
+                    mDatabase.getReference("chatRooms/"+chatRoomUuid+"/users/");
+            usersReference.setValue("{"+currentUserPhone+","+chat+"}");*/
+        }
+
         DatabaseReference myUserPhoneReference =
-                mDatabase.getReference("users/" + currentUserPhone + "/chatRooms/" + invitationPhone);
-        myUserPhoneReference.setValue(uuidChatRoom);
+                mDatabase.getReference("users/" + currentUserPhone + "/chatRooms/" + chatWith);
+        myUserPhoneReference.setValue(chatRoomUuid);
 
-        DatabaseReference contactUserPhoneReference =
-                mDatabase.getReference("users/" + invitationPhone + "/chatRooms/" + currentUserPhone);
-        contactUserPhoneReference.setValue(uuidChatRoom);
 
         DatabaseReference invitationReference =
                 mDatabase.getReference("users/" + currentUserPhone + "/invitations/" + uid);
         invitationReference.removeValue();
-
-        final DatabaseReference chatRoomReference =
-                mDatabase.getReference("chatRooms/"+uuidChatRoom);
-
-        final DatabaseReference usersReference =
-                mDatabase.getReference("chatRooms/"+uuidChatRoom+"/users/");
-        usersReference.setValue("{"+currentUserPhone+","+invitationPhone+"}");
 
         /*
         final DatabaseReference firstUserReference =
@@ -150,7 +153,7 @@ public class Database {
         */
     }
 
-    public void createChatRoomGroup(final String currentUserPhone, final String groupName) {
+    public void createChatRoomGroup(final String currentUserPhone, final String groupName, final ArrayList<Contact> invitedContacts) {
 
 
         String uuidChatRoom = UUID.randomUUID().toString();
@@ -162,15 +165,9 @@ public class Database {
         final DatabaseReference usersReference =
                 mDatabase.getReference("chatRooms/"+uuidChatRoom+"/users/");
         usersReference.setValue("{"+currentUserPhone+"}");
-
-        /*
-        final DatabaseReference firstUserReference =
-                mDatabase.getReference("chatRooms/"+uuidChatRoom+"/firstUser/");
-        firstUserReference.setValue(currentUserPhone);
-        final DatabaseReference secondUserReference =
-                mDatabase.getReference("chatRooms/"+uuidChatRoom+"/secondUser/");
-        secondUserReference.setValue(invitationPhone);
-        */
+        for (Contact contact: invitedContacts) {
+            sendInvitation(contact.getPhone(),"Invitation to join "+ groupName + "group", groupName, uuidChatRoom);
+        }
     }
 
     public void rejectInvitation(final String uid, final String currentUserPhone, final String invitationPhone) {
@@ -180,7 +177,7 @@ public class Database {
         invitationReference.removeValue();
     }
 
-    public void sendInvitation(final String contact_phone, final String message, final String currentUserPhone) {
+    public void sendInvitation(final String contact_phone, final String message, final String chatWith, final String uuidChatGroup) {
         DatabaseReference usersReference = mDatabase.getReference("users");
 
         final String uuidInvitation = UUID.randomUUID().toString();
@@ -195,14 +192,18 @@ public class Database {
                             mDatabase.getReference(receiverInvitesPath+"message");
                     final DatabaseReference authorReference =
                             mDatabase.getReference(receiverInvitesPath+"authorMail");
-                    final DatabaseReference authorPhoneReference =
-                            mDatabase.getReference(receiverInvitesPath+"authorPhone");
+                    final DatabaseReference chatWitheReference =
+                            mDatabase.getReference(receiverInvitesPath+"chatWith");
                     final DatabaseReference timestampReference =
                             mDatabase.getReference(receiverInvitesPath+"timestamp");
 
+                    final DatabaseReference groupReference =
+                            mDatabase.getReference(receiverInvitesPath+"chatRoomUuid");
+
                     messageReference.setValue(message);
                     authorReference.setValue(mAuth.getCurrentUser().getEmail());
-                    authorPhoneReference.setValue(currentUserPhone);
+                    chatWitheReference.setValue(chatWith);
+                    groupReference.setValue(uuidChatGroup);
 
                     Date date = new Date();
                     long timestamp =  date.getTime();

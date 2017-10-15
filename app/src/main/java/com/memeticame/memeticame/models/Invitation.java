@@ -7,17 +7,27 @@ package com.memeticame.memeticame.models;
 public class Invitation {
 
     private String uid;
+    private String ChatRoomUuid;
     private String authorMail;
-    private String authorPhone;
+    private String chatWith;
     private String message;
     private Long timestamp;
 
-    public String getAuthorPhone() {
-        return authorPhone;
+
+    public String getChatRoomUuid() {
+        return ChatRoomUuid;
     }
 
-    public void setAuthorPhone(String authorPhone) {
-        this.authorPhone = authorPhone;
+    public void setChatRoomUuid(String chatRoomUuid) {
+        ChatRoomUuid = chatRoomUuid;
+    }
+
+    public String getChatWith() {
+        return chatWith;
+    }
+
+    public void setChatWith(String chatWith) {
+        this.chatWith = chatWith;
     }
 
     public String getUid() {

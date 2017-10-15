@@ -2,12 +2,10 @@ package com.memeticame.memeticame.chats;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
@@ -15,12 +13,9 @@ import android.media.MediaRecorder;
 import android.media.MediaScannerConnection;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Environment;
-import android.provider.DocumentsContract;
+import android.provider.ContactsContract;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -29,6 +24,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -38,21 +34,19 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
+import com.memeticame.memeticame.AuthenticationActivity;
+import com.memeticame.memeticame.MainActivity;
 import com.memeticame.memeticame.R;
+import com.memeticame.memeticame.invitations.InvitationActivity;
 import com.memeticame.memeticame.models.Contact;
 import com.memeticame.memeticame.models.Database;
+import com.memeticame.memeticame.models.FilesHandler;
+import com.memeticame.memeticame.models.Invitation;
 import com.memeticame.memeticame.models.Message;
 import com.memeticame.memeticame.threading.SendMessage;
 
@@ -62,7 +56,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.UUID;
 
 public class ChatRoomActivity extends AppCompatActivity {
 
@@ -86,9 +79,14 @@ public class ChatRoomActivity extends AppCompatActivity {
     private static final String KEY_USERNAME = "username";
     private static final String KEY_PHONE = "phone";
     private static final String KEY_CHAT_ROOM_UUID = "chatRoomUuid";
-    private static final String USER_CHAT_ROOMS = "chatRooms";
+    private static final String APP_DIRECTORY = "memeticaMe";
+    private static final String IMAGE_FORMAT = ".jpg";
+    private static final String VIDEO_FORMAT = ".mp4";
+
 
     private final Database firebaseDatabase = new Database();
+    private final FilesHandler filesHandler = new FilesHandler();
+
     private final ArrayList<Message> messagesList = new ArrayList<>();
     private MessagesAdapter chatRoomAdapter;
 
@@ -113,12 +111,14 @@ public class ChatRoomActivity extends AppCompatActivity {
     private String mPath;
     private View mLayout;
 
-    private Message message;
     private String author;
     private String multimedia;
-    private String multimediaUrl;
 
-
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_chat_room, menu);
+        return true;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -222,14 +222,10 @@ public class ChatRoomActivity extends AppCompatActivity {
 
             if (ActivityCompat.shouldShowRequestPermissionRationale(ChatRoomActivity.this,
                     Manifest.permission.RECORD_AUDIO)) {
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
                 Snackbar.make(mLayout, "Para que podamos grabar audio, necesitamos permiso.",
                         Snackbar.LENGTH_INDEFINITE).setAction("OK", new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        // Request the permission
                         ActivityCompat.requestPermissions(ChatRoomActivity.this,
                                 new String[]{Manifest.permission.RECORD_AUDIO},
                                 RECORD_AUDIO_REQUEST);
@@ -237,13 +233,9 @@ public class ChatRoomActivity extends AppCompatActivity {
                 }).show();
 
             } else {
-                // No explanation needed, we can request the permission.
                 ActivityCompat.requestPermissions(ChatRoomActivity.this,
                         new String[]{Manifest.permission.RECORD_AUDIO},
                         RECORD_AUDIO_REQUEST);
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
             }
         }
     }
@@ -260,7 +252,6 @@ public class ChatRoomActivity extends AppCompatActivity {
         mPlayer = new MediaPlayer();
         try {
             mPlayer.setDataSource(recordFileName);
-            Log.i("AUDIO RECORD SOURCE", recordFileName);
             mPlayer.prepare();
             mPlayer.start();
         } catch (IOException e) {
@@ -279,13 +270,10 @@ public class ChatRoomActivity extends AppCompatActivity {
         mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
         mRecorder.setOutputFile(audioMultimedia);
         mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-
         try {
             mRecorder.prepare();
             mRecorder.start();
-        } catch (IOException e) {
-        }
-
+        } catch (IOException e) { }
     }
 
     private void stopRecording() {
@@ -293,7 +281,6 @@ public class ChatRoomActivity extends AppCompatActivity {
         mRecorder.stop();
         mRecorder.release();
         mRecorder = null;
-        //lesson.getMultimediaAudiosFiles().add(new MultimediaFile("AUDIO",mRecordFileName, transferUtility, S3_BUCKET_NAME));
     }
 
     @Override
@@ -316,16 +303,13 @@ public class ChatRoomActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if (ContextCompat.checkSelfPermission(ChatRoomActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         != PackageManager.PERMISSION_GRANTED) {
-                    Log.i("PERMISSION", "Storage Permission");
                     getWriteStoragePermissions();
                 }
                 else if (ContextCompat.checkSelfPermission(ChatRoomActivity.this, Manifest.permission.CAMERA)
                         != PackageManager.PERMISSION_GRANTED){
-                    Log.i("PERMISSION", "Camera Permission");
                     getCameraForPicturePermissions();
                 }
                 else {
-                    Log.i("PERMISSION", "Granted");
                     dispatchTakePictureIntent();
                 }
             }
@@ -339,14 +323,10 @@ public class ChatRoomActivity extends AppCompatActivity {
 
             if (ActivityCompat.shouldShowRequestPermissionRationale(ChatRoomActivity.this,
                     Manifest.permission.CAMERA)) {
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
                 Snackbar.make(mLayout, "To take a picture you must give access to camera",
                         Snackbar.LENGTH_INDEFINITE).setAction("OK", new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        // Request the permission
                         ActivityCompat.requestPermissions(ChatRoomActivity.this,
                                 new String[]{Manifest.permission.CAMERA},
                                 CAMERA_REQUEST_FOR_PICTURE);
@@ -354,13 +334,9 @@ public class ChatRoomActivity extends AppCompatActivity {
                 }).show();
 
             } else {
-                // No explanation needed, we can request the permission.
                 ActivityCompat.requestPermissions(ChatRoomActivity.this,
                         new String[]{Manifest.permission.CAMERA},
                         CAMERA_REQUEST_FOR_PICTURE);
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
             }
         }
     }
@@ -369,45 +345,34 @@ public class ChatRoomActivity extends AppCompatActivity {
                 Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
 
-            // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(ChatRoomActivity.this,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
                 Snackbar.make(mLayout, "To take save your picture you must give access to storage",
                         Snackbar.LENGTH_INDEFINITE).setAction("OK", new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        // Request the permission
                         ActivityCompat.requestPermissions(ChatRoomActivity.this,
                                 new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                                 WRITE_EXTERNAL_REEQUEST);
                     }
                 }).show();
             } else {
-                // No explanation needed, we can request the permission.
                 ActivityCompat.requestPermissions(ChatRoomActivity.this,
                         new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         WRITE_EXTERNAL_REEQUEST);
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
             }
         }
     }
     private void dispatchTakePictureIntent() {
 
-        String APP_DIRECTORY = "memeticaMe";
-
         File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), APP_DIRECTORY);
         boolean isDirectoryCreated = file.exists();
 
         if (!isDirectoryCreated) {
-            isDirectoryCreated = file.mkdir();
+            file.mkdir();
         }
         Long timestamp = System.currentTimeMillis() / 1000;
-        String imageName = timestamp.toString() + ".jpg";
+        String imageName = timestamp.toString() + IMAGE_FORMAT;
 
         mPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) +
                 File.separator +
@@ -426,16 +391,13 @@ public class ChatRoomActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if (ContextCompat.checkSelfPermission(ChatRoomActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         != PackageManager.PERMISSION_GRANTED) {
-                    Log.i("PERMISSION", "Storage Permission");
                     getWriteStoragePermissions();
                 }
                 else if (ContextCompat.checkSelfPermission(ChatRoomActivity.this, Manifest.permission.CAMERA)
                         != PackageManager.PERMISSION_GRANTED){
-                    Log.i("PERMISSION", "Camera Permission");
                     getCameraForVideoPermissions();
                 }
                 else {
-                    Log.i("PERMISSION", "Granted");
                     dispatchRecordVideoIntent();
                 }
             }
@@ -449,14 +411,10 @@ public class ChatRoomActivity extends AppCompatActivity {
 
             if (ActivityCompat.shouldShowRequestPermissionRationale(ChatRoomActivity.this,
                     Manifest.permission.CAMERA)) {
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
                 Snackbar.make(mLayout, "To record a video you must give access to camera",
                         Snackbar.LENGTH_INDEFINITE).setAction("OK", new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        // Request the permission
                         ActivityCompat.requestPermissions(ChatRoomActivity.this,
                                 new String[]{Manifest.permission.CAMERA},
                                 CAMERA_REQUEST_FOR_VIDEO);
@@ -464,29 +422,23 @@ public class ChatRoomActivity extends AppCompatActivity {
                 }).show();
 
             } else {
-                // No explanation needed, we can request the permission.
                 ActivityCompat.requestPermissions(ChatRoomActivity.this,
                         new String[]{Manifest.permission.CAMERA},
                         CAMERA_REQUEST_FOR_VIDEO);
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
             }
         }
     }
 
     private void dispatchRecordVideoIntent() {
 
-        String APP_DIRECTORY = "memeticaMe";
-
         File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), APP_DIRECTORY);
         boolean isDirectoryCreated = file.exists();
 
         if (!isDirectoryCreated) {
-            isDirectoryCreated = file.mkdir();
+            file.mkdir();
         }
         Long timestamp = System.currentTimeMillis() / 1000;
-        String imageName = timestamp.toString() + ".mp4";
+        String imageName = timestamp.toString() + VIDEO_FORMAT;
 
         mPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) +
                 File.separator +
@@ -516,8 +468,6 @@ public class ChatRoomActivity extends AppCompatActivity {
         fabImages.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //Snackbar.make(view, "Acceso a galería", Snackbar.LENGTH_LONG)
-                //        .setAction("Action", null).show();
 
                 if (ContextCompat.checkSelfPermission(ChatRoomActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)
                         != PackageManager.PERMISSION_GRANTED){
@@ -525,7 +475,6 @@ public class ChatRoomActivity extends AppCompatActivity {
                 }
                 else {
                     Intent intent = new Intent();
-                    //intent.setType("image/*");
                     intent.setAction(Intent.ACTION_GET_CONTENT);
                     Uri uri = Uri.parse(ABSOLUTE_STORAGE_PATH);
                     intent.setDataAndType(uri, "image/*");
@@ -540,30 +489,21 @@ public class ChatRoomActivity extends AppCompatActivity {
                 Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
 
-            // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(ChatRoomActivity.this,
                     Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
                 Snackbar.make(mLayout, "To take see a picture you must give access to the gallery",
                         Snackbar.LENGTH_INDEFINITE).setAction("OK", new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        // Request the permission
                         ActivityCompat.requestPermissions(ChatRoomActivity.this,
                                 new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                                 READ_EXTERNAL_REQUEST);
                     }
                 }).show();
             } else {
-                // No explanation needed, we can request the permission.
                 ActivityCompat.requestPermissions(ChatRoomActivity.this,
                         new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                         READ_EXTERNAL_REQUEST);
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
             }
         }
     }
@@ -581,6 +521,10 @@ public class ChatRoomActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             finish();
+        }
+        else if (item.getItemId() == R.id.action_add_member) {
+            //InvitationActivity.getIntent(ChatRoomActivity.this);
+
         }
         return super.onOptionsItemSelected(item);
     }
@@ -600,15 +544,12 @@ public class ChatRoomActivity extends AppCompatActivity {
                         messagesList.add(message);
                     }
                 }
-                //Collections.sort(messagesList, (e1, e2)-> new Date(e1.getTimestamp()).compareTo(new Date(e2.getTimestamp())));
                 Collections.sort(messagesList, comparator);
                 chatRoomAdapter.notifyDataSetChanged();
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
+            public void onCancelled(DatabaseError databaseError) { }
         });
     }
 
@@ -650,7 +591,6 @@ public class ChatRoomActivity extends AppCompatActivity {
                                            String permissions[], int[] grantResults) {
         switch (requestCode) {
             case CAMERA_REQUEST_FOR_PICTURE:
-                // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     if (ContextCompat.checkSelfPermission(ChatRoomActivity.this,
@@ -662,7 +602,6 @@ public class ChatRoomActivity extends AppCompatActivity {
                 }
                 break;
             case CAMERA_REQUEST_FOR_VIDEO:
-                // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     if (ContextCompat.checkSelfPermission(ChatRoomActivity.this,
@@ -710,7 +649,6 @@ public class ChatRoomActivity extends AppCompatActivity {
                             Toast.LENGTH_LONG).show();
                 }
                 break;
-
         }
     }
 
@@ -739,15 +677,12 @@ public class ChatRoomActivity extends AppCompatActivity {
 
                     if (data != null)
                     {
-                        mPath = getRealPathFromURI_API19(getApplicationContext(),data.getData());
+                        mPath = filesHandler.getRealPathFromURI_API19(getApplicationContext(),data.getData());
                         multimedia = "images/"+mPath.substring(mPath.lastIndexOf("/") + 1);
                         Bitmap bitmapSlected = BitmapFactory.decodeFile(mPath);
                         imageAttachment.setVisibility(View.VISIBLE);
                         imageAttachment.setImageBitmap(ThumbnailUtils.extractThumbnail(bitmapSlected, 80, 80));
                         imageAttachment.setRotation(90);
-                        //lesson.getMultimediaPicturesFiles().add(new MultimediaFile(EXTENSION_PICTURE,mPath, transferUtility,S3_BUCKET_NAME));
-                        //multimediaImagePictureAdapter.notifyDataSetChanged();
-
 
                     } else if (resultCode == Activity.RESULT_CANCELED) {
                         //Toast.makeText(LessonFormActivity.this, "Cancelled", Toast.LENGTH_SHORT).show();
@@ -756,7 +691,7 @@ public class ChatRoomActivity extends AppCompatActivity {
 
                 case FILES_REQUEST:
                     Uri selectedUri = data.getData();
-                    mPath = getPath(ChatRoomActivity.this, selectedUri);
+                    mPath = filesHandler.getPath(ChatRoomActivity.this, selectedUri);
                     multimedia = "files/"+ mPath.substring(mPath.lastIndexOf("/") + 1);
                     imageAttachment.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_file_download));
                     imageAttachment.setVisibility(View.VISIBLE);
@@ -773,9 +708,8 @@ public class ChatRoomActivity extends AppCompatActivity {
                                 }
                             });
                     Uri videoUri = data.getData();
-                    mPath = getPath(ChatRoomActivity.this, videoUri);
+                    mPath = filesHandler.getPath(ChatRoomActivity.this, videoUri);
                     multimedia = "videos/"+mPath.substring(mPath.lastIndexOf("/") + 1);
-                    Log.i("SENDVIDEO",mPath);
                     imageAttachment.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_play_video));
                     imageAttachment.setVisibility(View.VISIBLE);
 
@@ -790,149 +724,6 @@ public class ChatRoomActivity extends AppCompatActivity {
         intent.putExtra(KEY_PHONE,phone);
         intent.putExtra(KEY_CHAT_ROOM_UUID,chatRoomUuid);
         return intent;
-    }
-
-    public static String getRealPathFromURI_API19(Context context, Uri uri){
-        String filePath = "";
-        String wholeID = DocumentsContract.getDocumentId(uri);
-
-        // Split at colon, use second item in the array
-        String id = wholeID.split(":")[1];
-
-        String[] column = { MediaStore.Images.Media.DATA };
-
-        // where id is equal to
-        String sel = MediaStore.Images.Media._ID + "=?";
-
-        Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                column, sel, new String[]{ id }, null);
-
-        int columnIndex = cursor.getColumnIndex(column[0]);
-
-        if (cursor.moveToFirst()) {
-            filePath = cursor.getString(columnIndex);
-        }
-        cursor.close();
-        return filePath;
-    }
-
-    public static String getPath(final Context context, final Uri uri) {
-
-        final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
-
-        // DocumentProvider
-        if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
-            // ExternalStorageProvider
-            if (isExternalStorageDocument(uri)) {
-                final String docId = DocumentsContract.getDocumentId(uri);
-                final String[] split = docId.split(":");
-                final String type = split[0];
-
-                if ("primary".equalsIgnoreCase(type)) {
-                    return Environment.getExternalStorageDirectory() + "/" + split[1];
-                }
-
-                // TODO handle non-primary volumes
-            }
-            // DownloadsProvider
-            else if (isDownloadsDocument(uri)) {
-
-                final String id = DocumentsContract.getDocumentId(uri);
-                final Uri contentUri = ContentUris.withAppendedId(
-                        Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
-
-                return getDataColumn(context, contentUri, null, null);
-            }
-            // MediaProvider
-            else if (isMediaDocument(uri)) {
-                final String docId = DocumentsContract.getDocumentId(uri);
-                final String[] split = docId.split(":");
-                final String type = split[0];
-
-                Uri contentUri = null;
-                if ("image".equals(type)) {
-                    contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-                } else if ("video".equals(type)) {
-                    contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
-                } else if ("audio".equals(type)) {
-                    contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-                }
-
-                final String selection = "_id=?";
-                final String[] selectionArgs = new String[] {
-                        split[1]
-                };
-
-                return getDataColumn(context, contentUri, selection, selectionArgs);
-            }
-        }
-        // MediaStore (and general)
-        else if ("content".equalsIgnoreCase(uri.getScheme())) {
-            return getDataColumn(context, uri, null, null);
-        }
-        // File
-        else if ("file".equalsIgnoreCase(uri.getScheme())) {
-            return uri.getPath();
-        }
-
-        return null;
-    }
-
-    /**
-     * Get the value of the data column for this Uri. This is useful for
-     * MediaStore Uris, and other file-based ContentProviders.
-     *
-     * @param context The context.
-     * @param uri The Uri to query.
-     * @param selection (Optional) Filter used in the query.
-     * @param selectionArgs (Optional) Selection arguments used in the query.
-     * @return The value of the _data column, which is typically a file path.
-     */
-    public static String getDataColumn(Context context, Uri uri, String selection,
-                                       String[] selectionArgs) {
-
-        Cursor cursor = null;
-        final String column = "_data";
-        final String[] projection = {
-                column
-        };
-
-        try {
-            cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
-                    null);
-            if (cursor != null && cursor.moveToFirst()) {
-                final int column_index = cursor.getColumnIndexOrThrow(column);
-                return cursor.getString(column_index);
-            }
-        } finally {
-            if (cursor != null)
-                cursor.close();
-        }
-        return null;
-    }
-
-    /**
-     * @param uri The Uri to check.
-     * @return Whether the Uri authority is ExternalStorageProvider.
-     */
-    public static boolean isExternalStorageDocument(Uri uri) {
-        return "com.android.externalstorage.documents".equals(uri.getAuthority());
-    }
-
-    /**
-     * @param uri The Uri to check.
-     * @return Whether the Uri authority is DownloadsProvider.
-     */
-    public static boolean isDownloadsDocument(Uri uri) {
-        return "com.android.providers.downloads.documents".equals(uri.getAuthority());
-    }
-
-    /**
-     * @param uri The Uri to check.
-     * @return Whether the Uri authority is MediaProvider.
-     */
-    public static boolean isMediaDocument(Uri uri) {
-        return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
 
 }

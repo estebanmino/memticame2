@@ -61,7 +61,7 @@ public class InvitationActivity extends AppCompatActivity {
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                database.sendInvitation(inviteContact.getPhone(), editMessage.getText().toString(), currentUserPhone);
+                database.sendInvitation(inviteContact.getPhone(), editMessage.getText().toString(), currentUserPhone, null);
                 MainActivity.getIntent(InvitationActivity.this);
             }
         });

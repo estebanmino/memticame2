@@ -2,7 +2,6 @@ package com.memeticame.memeticame.invitations;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,8 +34,9 @@ public class InvitationsAdapter extends BaseAdapter {
 
     private  String invitationMessage;
     private  String invitationMail;
-    private  String invitationPhone;
+    private  String chatWith;
     private  String invitationUid;
+    private  String chatRoomUuid;
 
     public InvitationsAdapter(Context context, ArrayList<Invitation> contactsArrayList) {
         this.context = context;
@@ -80,8 +80,9 @@ public class InvitationsAdapter extends BaseAdapter {
 
         invitationMail = invitationsArrayList.get(position).getAuthorMail();
         invitationMessage = invitationsArrayList.get(position).getMessage();
-        invitationPhone = invitationsArrayList.get(position).getAuthorPhone();
+        chatWith = invitationsArrayList.get(position).getChatWith();
         invitationUid = invitationsArrayList.get(position).getUid();
+        chatRoomUuid = invitationsArrayList.get(position).getChatRoomUuid();
 
         contactName.setText(invitationMail);
         contactMessage.setText(invitationMessage);
@@ -96,7 +97,7 @@ public class InvitationsAdapter extends BaseAdapter {
         btnAccept.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mDatabase.acceptInvitation(invitationUid, currentUserPhone, invitationPhone);
+                mDatabase.acceptInvitation(invitationUid, currentUserPhone, chatWith, chatRoomUuid);
             }
         });
     }
@@ -105,7 +106,7 @@ public class InvitationsAdapter extends BaseAdapter {
         btnReject.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mDatabase.rejectInvitation(invitationUid, currentUserPhone, invitationPhone);
+                mDatabase.rejectInvitation(invitationUid, currentUserPhone, chatWith);
             }
         });
     }
