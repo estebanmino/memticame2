@@ -43,14 +43,18 @@
         <activity android:name=".invitations.InvitationActivity" />
         <activity android:name=".chats.ChatRoomActivity" />
 
-        <service android:name=".notifications.MyFirebaseInstanceIdService">
+        <!-- Pusher's FCM listeners and services -->
+        <service
+            android:name="com.pusher.android.notifications.fcm.FCMMessagingService">
             <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
-        <service android:name=".notifications.MyFirebaseMessagingService">
+
+        <service
+            android:name="com.pusher.android.notifications.fcm.FCMInstanceIDService">
             <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
             </intent-filter>
         </service>
 
