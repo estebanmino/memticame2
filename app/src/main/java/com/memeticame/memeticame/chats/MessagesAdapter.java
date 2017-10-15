@@ -115,6 +115,7 @@ public class MessagesAdapter extends BaseAdapter {
 
         final TextView message = convertView.findViewById(R.id.text_message_body);
         final TextView timestamp = convertView.findViewById(R.id.text_message_time);
+        final TextView senderName = convertView.findViewById(R.id.text_sender_name);
         final ImageView imageAttachmentPreview = convertView.findViewById(R.id.image_attachment_preview);
         final Button btnDownload = convertView.findViewById(R.id.btn_download);
         final ProgressBar progressBar = convertView.findViewById(R.id.progress_bar);
@@ -122,6 +123,7 @@ public class MessagesAdapter extends BaseAdapter {
         final Message messageFetched = messagesList.get(position);
         final String messageContent = messageFetched.getContent();
         final long messageTimestamp = messageFetched.getTimestamp();
+        final String messageAuthor = messageFetched.getAuthor();
 
 
 
@@ -217,6 +219,10 @@ public class MessagesAdapter extends BaseAdapter {
                     break;
             }
                  }
+        if (getItemViewType(position) == VIEW_TYPE_MESSAGE_RECEIVED) {
+            senderName.setText(messageAuthor);
+        }
+
         message.setText(messageContent);
         Date date = new Date(messageTimestamp);
         Format format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
