@@ -14,7 +14,6 @@ import android.media.MediaScannerConnection;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Environment;
-import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -34,19 +33,14 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
-import com.memeticame.memeticame.AuthenticationActivity;
-import com.memeticame.memeticame.MainActivity;
 import com.memeticame.memeticame.R;
-import com.memeticame.memeticame.invitations.InvitationActivity;
 import com.memeticame.memeticame.models.Contact;
 import com.memeticame.memeticame.models.Database;
 import com.memeticame.memeticame.models.FilesHandler;
-import com.memeticame.memeticame.models.Invitation;
 import com.memeticame.memeticame.models.Message;
 import com.memeticame.memeticame.threading.SendMessage;
 
@@ -76,7 +70,7 @@ public class ChatRoomActivity extends AppCompatActivity {
     boolean isRecording =  false;
 
     private final Contact chatContact = new Contact();
-    private static final String KEY_USERNAME = "username";
+    private static final String KEY_CHAT_ROOM_NAME = "username";
     private static final String KEY_PHONE = "phone";
     private static final String KEY_CHAT_ROOM_UUID = "chatRoomUuid";
     private static final String KEY_IS_GROUP = "isGroup";
@@ -526,10 +520,16 @@ public class ChatRoomActivity extends AppCompatActivity {
         if (item.getItemId() == android.R.id.home) {
             finish();
         }
-        else if (item.getItemId() == R.id.action_add_contact) {
-            finish();
+        else if (item.getItemId() == R.id.action_show_info) {
+            startActivity(ChatRoomInformationActivity.getIntent(ChatRoomActivity.this,
+                    getIntent().getStringExtra(KEY_CHAT_ROOM_NAME),
+                    getIntent().getStringExtra(KEY_CHAT_ROOM_UUID)));
         }
-
+        else  if (item.getItemId() == R.id.action_add_member) {
+            startActivity(ChatRoomAddMemberActivity.getIntent(ChatRoomActivity.this,
+                    getIntent().getStringExtra(KEY_CHAT_ROOM_NAME),
+                    getIntent().getStringExtra(KEY_CHAT_ROOM_UUID)));
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -559,7 +559,7 @@ public class ChatRoomActivity extends AppCompatActivity {
 
     public void setChatContact() {
         //set contact
-        chatContact.setName(getIntent().getStringExtra(KEY_USERNAME));
+        chatContact.setName(getIntent().getStringExtra(KEY_CHAT_ROOM_NAME));
         chatContact.setPhone(getIntent().getStringExtra(KEY_PHONE));
     }
 
@@ -724,7 +724,7 @@ public class ChatRoomActivity extends AppCompatActivity {
 
     public static Intent getIntent(Context context, String name, String phone, String chatRoomUuid, String isGroup) {
         Intent intent = new Intent(context,ChatRoomActivity.class);
-        intent.putExtra(KEY_USERNAME,name);
+        intent.putExtra(KEY_CHAT_ROOM_NAME,name);
         intent.putExtra(KEY_PHONE,phone);
         intent.putExtra(KEY_CHAT_ROOM_UUID,chatRoomUuid);
         intent.putExtra(KEY_IS_GROUP,isGroup);

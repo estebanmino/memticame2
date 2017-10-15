@@ -163,8 +163,23 @@ public class Database {
         myUserPhoneReference.setValue(uuidChatRoom);
 
         final DatabaseReference usersReference =
-                mDatabase.getReference("chatRooms/"+uuidChatRoom+"/users/");
+                mDatabase.getReference("chatRooms/"+uuidChatRoom+"/members/");
         usersReference.setValue("{"+currentUserPhone+"}");
+
+        final DatabaseReference groupNameReference =
+                mDatabase.getReference("chatRooms/"+uuidChatRoom+"/groupName/");
+        groupNameReference.setValue(groupName);
+
+        final DatabaseReference groupCreatorReference =
+                mDatabase.getReference("chatRooms/"+uuidChatRoom+"/creator/");
+        groupCreatorReference.setValue(currentUserPhone);
+
+        final DatabaseReference groupCreatedAtReference =
+                mDatabase.getReference("chatRooms/"+uuidChatRoom+"/createdAt/");
+        Date date = new Date();
+        long timestamp =  date.getTime();
+        groupCreatedAtReference.setValue(timestamp);
+
         for (Contact contact: invitedContacts) {
             sendInvitation(contact.getPhone(),"Invitation to join "+ groupName + "group", groupName, uuidChatRoom);
         }

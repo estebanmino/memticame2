@@ -8,45 +8,42 @@ import java.util.HashMap;
 
 public class ChatRoom {
 
-    private String email;
-    private String phone;
-    private String name;
-    private String id;
-    private HashMap<String, String> contacts = null;
 
-    public String getName() {
-        return name;
+    private String groupName;
+    private long createdAt;
+    private String creator;
+    private String members;
+
+    public String getGroupName() {
+        return groupName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
     }
 
-    public String getId() {
-        return id;
+    public long getCreatedAt() {
+        return createdAt;
     }
 
-    public String getEmail() {
-        return email;
+    public void setCreatedAt(long createdAt) {
+        this.createdAt = createdAt;
     }
 
-    public String getPhone() {
-        return phone;
+    public String getCreator() {
+        return creator;
     }
 
-    public HashMap<String, String> getContacts() {
-        return contacts;
+    public void setCreator(String creator) {
+        this.creator = creator;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public String getMembers() {
+        return members;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setMembers(String members) {
+        this.members = members;
     }
 
-    public void setPhone(String phone) {
-        this.phone = phone.replace(",","").replace(" ","");
-    }
 }

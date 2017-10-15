@@ -55,6 +55,8 @@
         </service>
 
         <activity android:name=".invitations.NewGroupInvitationActivity" />
+        <activity android:name=".chats.ChatRoomInformationActivity" />
+        <activity android:name=".chats.ChatRoomAddMemberActivity"></activity>
     </application>
 
 </manifest>
