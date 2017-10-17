@@ -2,8 +2,12 @@ package com.memeticame.memeticame.threading;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
@@ -27,6 +31,7 @@ import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.memeticame.memeticame.R;
+import com.memeticame.memeticame.cache.LRUCache;
 import com.memeticame.memeticame.chats.ChatRoomActivity;
 
 import java.io.File;
@@ -114,88 +119,103 @@ public class SendMessage extends AsyncTask<String,Float,Integer> {
             Uri file = Uri.fromFile(new File(filePath));
             StorageReference riversRef = mStorageRef.child(multimediaFile);
 
+            if (multimediaFile.contains("images")) {
+                String[] thumbnailPath = multimediaFile.split("\\.");
+                String thumbName = thumbnailPath[0];
+                String thumbExtension = thumbnailPath[1];
+
+                String thumbNewPath = thumbName +"_thumbnail." + thumbExtension;
+                StorageReference thumbRef = mStorageRef.child(thumbNewPath);
+
+                Bitmap bitmap = BitmapFactory.decodeFile(filePath);
+                Bitmap thumbBitmap = ThumbnailUtils.extractThumbnail(bitmap, 80, 80);
+                String bitmapPath = MediaStore.Images.Media.insertImage(context.getContentResolver(), thumbBitmap,null, null);
+                thumbRef.putFile(Uri.parse(bitmapPath));
+                LRUCache.getInstance().getLru().put(thumbNewPath, thumbBitmap);
+            }
+
             publishProgress(30f);
             riversRef.putFile(file)
 
-                    .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                            @SuppressWarnings("VisibleForTests")  float progress =(float) (taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-                            publishProgress(70f * progress);
-                        }
-                    })
-                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(final UploadTask.TaskSnapshot taskSnapshot) {
+                .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                        @SuppressWarnings("VisibleForTests")  float progress =(float) (taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                        publishProgress(70f * progress);
+                    }
+                })
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(final UploadTask.TaskSnapshot taskSnapshot) {
 
-                            final String uuidMessage = UUID.randomUUID().toString();
-                            DatabaseReference userContactsReference = mDatabase.getReference("users/"+
-                                    currentUserPhone+"/"+USER_CHAT_ROOMS);
-                            userContactsReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
-                                    if (dataSnapshot.hasChild(receiverPhone)) {
-                                        final String referencePath = "chatRooms/"+dataSnapshot.
-                                                child(receiverPhone).getValue().toString()+"/messages/"+uuidMessage;
+                        final String uuidMessage = UUID.randomUUID().toString();
+                        DatabaseReference userContactsReference = mDatabase.getReference("users/"+
+                                currentUserPhone+"/"+USER_CHAT_ROOMS);
+                        userContactsReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                if (dataSnapshot.hasChild(receiverPhone)) {
+                                    final String referencePath = "chatRooms/"+dataSnapshot.
+                                            child(receiverPhone).getValue().toString()+"/messages/"+uuidMessage;
 
-                                        final DatabaseReference multimediaReference =
-                                                mDatabase.getReference(referencePath+"/multimedia");
-                                        final DatabaseReference multimediaSizeReference =
-                                                mDatabase.getReference(referencePath+"/multimediaSize");
+                                    final DatabaseReference multimediaReference =
+                                            mDatabase.getReference(referencePath+"/multimedia");
+                                    final DatabaseReference multimediaSizeReference =
+                                            mDatabase.getReference(referencePath+"/multimediaSize");
 
-                                        sendTextMessage(uuidMessage,currentUserPhone,receiverPhone,content);
+                                    sendTextMessage(uuidMessage,currentUserPhone,receiverPhone,content);
 
-                                        multimediaReference.setValue(multimediaFile);
-                                        @SuppressWarnings("VisibleForTests") String size =
-                                                humanReadableByteCount(taskSnapshot.getTotalByteCount(),true);
-                                        multimediaSizeReference.setValue(size);
-                                        publishProgress(100f);
-                                    }
+                                    multimediaReference.setValue(multimediaFile);
+                                    @SuppressWarnings("VisibleForTests") String size =
+                                            humanReadableByteCount(taskSnapshot.getTotalByteCount(),true);
+                                    multimediaSizeReference.setValue(size);
+                                    publishProgress(100f);
                                 }
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
-                                }
-                            });
+                            }
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                            }
+                        });
 
-                            activity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context, "Upload finished", Toast.LENGTH_SHORT).show();
+
+                                if (multimedia != null ) {
+                                    fabSend.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_cloud_ready));
+                                    Toast.makeText(context, "Upload finished", Toast.LENGTH_SHORT).show();
+                                }
+                                fabSend.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_send_dark));
+                                multimedia = null;
+                            }
+                        });
+                        publishProgress(100f);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        // Handle unsuccessful uploads
+                        // ...
+                        Toast.makeText(context, "Upload file failed, retry again", Toast.LENGTH_LONG).show();
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+
+                                if (multimedia != null ) {
+                                    fabSend.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_cloud_ready));
+
                                     Toast.makeText(context, "Upload finished", Toast.LENGTH_SHORT).show();
 
-                                    if (multimedia != null ) {
-                                        fabSend.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_cloud_ready));
-                                        Toast.makeText(context, "Upload finished", Toast.LENGTH_SHORT).show();
-                                    }
-                                    fabSend.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_send_dark));
-                                    multimedia = null;
                                 }
-                            });
-                            publishProgress(100f);
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception exception) {
-                            // Handle unsuccessful uploads
-                            // ...
-                            Toast.makeText(context, "Upload file failed, retry again", Toast.LENGTH_LONG).show();
-                            activity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
+                                fabSend.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_send_dark));
+                                multimedia = null;
+                            }
+                        });
 
-                                    if (multimedia != null ) {
-                                        fabSend.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_cloud_ready));
-
-                                        Toast.makeText(context, "Upload finished", Toast.LENGTH_SHORT).show();
-
-                                    }
-                                    fabSend.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_send_dark));
-                                    multimedia = null;
-                                }
-                            });
-
-                        }
-                    });
+                    }
+                });
         } else {
             final String uidMessage = UUID.randomUUID().toString();
 
