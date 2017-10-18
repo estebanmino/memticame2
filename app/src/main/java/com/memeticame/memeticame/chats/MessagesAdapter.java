@@ -67,6 +67,9 @@ public class MessagesAdapter extends BaseAdapter {
     private static final int VIEW_TYPE_MESSAGE_SENT = 1;
     private static final int VIEW_TYPE_MESSAGE_RECEIVED = 2;
 
+    Boolean mStartPlaying = true;
+    MediaPlayer mPlayer = null;
+
 
     public MessagesAdapter(Context context, ArrayList<Message> messagesList, FirebaseAuth mAuth, String currentUserPhone) {
         this.context = context;
@@ -180,6 +183,8 @@ public class MessagesAdapter extends BaseAdapter {
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
+                            btnDownload.setText("PLAY");
+
                             break;
 
                         case "files":
@@ -270,28 +275,16 @@ public class MessagesAdapter extends BaseAdapter {
         }
     }
     private void stopPlaying(MediaPlayer mediaPlayer) {
-        Log.d("PLAYING", "stopPlaying: ");
-        try {
-            if (mediaPlayer != null) {
-                if (mediaPlayer.isPlaying())
-                    mediaPlayer.stop();
-                mediaPlayer.release();
-                mediaPlayer = null;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        mPlayer.release();
+        mPlayer = null;
     }
 
     public void onPlay(boolean start, MediaPlayer mediaPlayer, String mPath) {
         if (start) {
-            Log.i("PLAYING", "TRUE");
             mediaPlayer = new MediaPlayer();
             startPlaying(mediaPlayer, mPath);
         } else {
-            Log.i("PLAYING", "FALSE");
             stopPlaying(mediaPlayer);
-            //mediaPlayer = new MediaPlayer();
         }
     }
 
