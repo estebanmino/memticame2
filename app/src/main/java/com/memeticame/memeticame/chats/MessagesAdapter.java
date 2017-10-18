@@ -208,20 +208,16 @@ public class MessagesAdapter extends BaseAdapter {
                 case "images":
                     imageAttachmentPreview.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_gallery_dark));
 
-                    Log.i("MULTIMEDIAPATH" , messageFetched.getMultimedia());
                     String[] thumbnailPath = messageFetched.getMultimedia().split("\\.");
 
                     String thumbName = thumbnailPath[0];
                     String thumbExtension = thumbnailPath[1];
+                    textFileSize.setVisibility(View.VISIBLE);
+                    textFileSize.setText(messageFetched.getMultimediaSize());
 
                     String thumbKey = thumbName +"_thumbnail." + thumbExtension;
 
                     if (LRUCache.getInstance().getLru().get(thumbKey) == null){
-                        Log.i("THUMBKEY", "isnull");
-                        //DownloadFile downloadFile = new DownloadFile(context, btnDownload, progressBar, messageFetched);
-                        //Dow
-                        //downloadFile.execute(messageFetched.getAuthor(), "",
-                         //       thumbKey);
                         DownloadImageThumbnail downloadImageThumbnail = new DownloadImageThumbnail(context, progressBar, messageFetched,imageAttachmentPreview);
                         downloadImageThumbnail.execute(messageFetched.getAuthor(), "",
                                       thumbKey);
@@ -238,13 +234,18 @@ public class MessagesAdapter extends BaseAdapter {
                     textFileSize.setVisibility(View.VISIBLE);
                     textFileName.setText(messageFetched.getMultimediaName());
                     textFileSize.setText(messageFetched.getMultimediaSize());
+                    Log.i("MULTIMEDIASIZE",messageFetched.getMultimediaSize());
                     break;
 
                 case "audios":
                     imageAttachmentPreview.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_play_audio));
+                    textFileSize.setVisibility(View.VISIBLE);
+                    textFileSize.setText(messageFetched.getMultimediaSize());
                     break;
                 case "videos":
                     imageAttachmentPreview.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_play_video));
+                    textFileSize.setVisibility(View.VISIBLE);
+                    textFileSize.setText(messageFetched.getMultimediaSize());
                     break;
             }
                  }
