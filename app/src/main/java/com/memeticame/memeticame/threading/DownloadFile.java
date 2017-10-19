@@ -10,6 +10,8 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 
 import com.google.android.gms.tasks.OnFailureListener;
@@ -22,6 +24,7 @@ import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.memeticame.memeticame.R;
 import com.memeticame.memeticame.chats.ChatRoomActivity;
+import com.memeticame.memeticame.managers.MediaPlayerManager;
 import com.memeticame.memeticame.models.Message;
 
 import java.io.File;
@@ -41,12 +44,22 @@ public class DownloadFile extends AsyncTask<String,Float,Integer> {
     private String fileDownloadedPath;
     private ProgressBar progressBar;
     private Context context;
+    private LinearLayout layoutAudioHandler;
+    private ImageView imagePlay;
+    private ImageView imagePause;
+    private ImageView imageStop;
 
-    public DownloadFile(Context context, Button btnDoownload, ProgressBar progressBar,Message message) {
+    public DownloadFile(Context context, Button btnDownload, ProgressBar progressBar,
+                        Message message, LinearLayout layoutAudioHandler, ImageView imagePlay,
+                        ImageView imagePause, ImageView imageStop) {
         this.context = context;
-        this.btnDownload = btnDoownload;
+        this.btnDownload = btnDownload;
         this.progressBar = progressBar;
         this.message = message;
+        this.layoutAudioHandler = layoutAudioHandler;
+        this.imagePause = imagePause;
+        this.imagePlay = imagePlay;
+        this.imageStop = imageStop;
     }
 
 
@@ -56,6 +69,7 @@ public class DownloadFile extends AsyncTask<String,Float,Integer> {
         progressBar.setVisibility(View.VISIBLE);
         progressBar.setProgress(10);
         btnDownload.setVisibility(View.GONE);
+
     }
 
     @Override
@@ -112,42 +126,57 @@ public class DownloadFile extends AsyncTask<String,Float,Integer> {
                                 ((ChatRoomActivity)context).runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        btnDownload.setText("Open");
-                                        btnDownload.setVisibility(View.VISIBLE);
-                                        progressBar.setVisibility(View.GONE);
+                                        if (!multimediaFile.contains("audios")) {
+                                            btnDownload.setText("Open");
+                                            btnDownload.setVisibility(View.VISIBLE);
+                                            progressBar.setVisibility(View.GONE);
+                                        } else {
+                                            btnDownload.setVisibility(View.GONE);
+                                            progressBar.setVisibility(View.GONE);
+                                            layoutAudioHandler.setVisibility(View.VISIBLE);
+
+                                            final MediaPlayerManager mediaPlayerManager = new MediaPlayerManager(context,
+                                                    Uri.fromFile(new File(localFile.getPath())), imagePlay, imagePause, imageStop);
+
+                                            imagePlay.setOnClickListener(new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View v) {
+                                                    Log.i("IMAGEPLAY","CLICKED");
+                                                    mediaPlayerManager.onPlay();
+                                                }
+                                            });
+
+                                            imagePause.setOnClickListener(new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View v) {
+                                                    mediaPlayerManager.onPause();
+                                                }
+                                            });
+
+                                            imageStop.setOnClickListener(new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View v) {
+                                                    mediaPlayerManager.onStop();
+                                                }
+                                            });
+                                        }
                                     }
                                 });
 
+                                if (multimediaFile.substring(0, multimediaFile.lastIndexOf("/")) != "audios") {
 
-                                btnDownload.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View view) {
-                                        if (multimediaFile.substring(0, multimediaFile.lastIndexOf("/")) == "audios"){
-                                            MediaPlayer mediaPlayer = new MediaPlayer();
-                                            mediaPlayer.setOnPreparedListener(
-                                                    new MediaPlayer.OnPreparedListener() {
-                                                        @Override
-                                                        public void onPrepared(MediaPlayer mediaPlayer) {
-                                                            mediaPlayer.start();
-                                                        }
-                                                    });
-                                            try {
-                                                mediaPlayer.setDataSource(context,
-                                                        Uri.parse(localFile.getPath()));
-                                                mediaPlayer.prepareAsync();
-                                            } catch (IOException e) {
-                                                e.printStackTrace();
-                                            }
-                                        }
-                                        else {
+                                    btnDownload.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+
                                             try {
                                                 openFile(context, Uri.fromFile(new File(localFile.getPath())), localFile.getPath());
-                                            } catch (Exception e){}
+                                            } catch (Exception e) {
+                                            }
                                         }
-                                    }
-                                });
+                                    });
 
-                            }
+                                }    }
                         }).addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception exception) {

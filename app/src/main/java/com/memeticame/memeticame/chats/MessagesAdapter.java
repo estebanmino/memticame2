@@ -20,6 +20,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -71,6 +72,7 @@ public class MessagesAdapter extends BaseAdapter {
     MediaPlayer mPlayer = null;
 
 
+
     public MessagesAdapter(Context context, ArrayList<Message> messagesList, FirebaseAuth mAuth, String currentUserPhone) {
         this.context = context;
         this.messagesList = messagesList;
@@ -112,12 +114,18 @@ public class MessagesAdapter extends BaseAdapter {
             LayoutInflater layoutInflater =
                     (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = layoutInflater.inflate(R.layout.chat_message_received, null);
+
+
         }
         else {
             LayoutInflater layoutInflater =
                     (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = layoutInflater.inflate(R.layout.chat_message_sent, null);
         }
+        final LinearLayout layoutAudioHandler = convertView.findViewById(R.id.audio_handler);
+        final ImageView imagePlay = convertView.findViewById(R.id.image_play);
+        final ImageView imagePause = convertView.findViewById(R.id.image_pause);
+        final ImageView imageStop = convertView.findViewById(R.id.image_stop);
 
         final TextView textFileName = convertView.findViewById(R.id.text_file_name);
         final TextView textFileSize = convertView.findViewById(R.id.text_file_size);
@@ -167,6 +175,9 @@ public class MessagesAdapter extends BaseAdapter {
                             break;
 
                         case "audios":
+                            Log.i("DOWNLOADAUDIO","TRUE");
+                            btnDownload.setVisibility(View.INVISIBLE);
+                            layoutAudioHandler.setVisibility(View.VISIBLE);
 
                             MediaPlayer mediaPlayer = new MediaPlayer();
                             mediaPlayer.setOnPreparedListener(
@@ -183,7 +194,6 @@ public class MessagesAdapter extends BaseAdapter {
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
-                            btnDownload.setText("PLAY");
 
                             break;
 
@@ -204,7 +214,8 @@ public class MessagesAdapter extends BaseAdapter {
                 btnDownload.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        DownloadFile downloadFile = new DownloadFile(context, btnDownload, progressBar, messageFetched);
+                        DownloadFile downloadFile = new DownloadFile(context, btnDownload, progressBar, messageFetched, layoutAudioHandler,
+                                imagePlay,imagePause,imageStop);
                         downloadFile.execute(messageFetched.getAuthor(), "",
                                 messageFetched.getMultimedia());
 
@@ -223,7 +234,8 @@ public class MessagesAdapter extends BaseAdapter {
                     String thumbKey = thumbName +"_thumbnail." + thumbExtension;
 
                     if (LRUCache.getInstance().getLru().get(thumbKey) == null){
-                        DownloadImageThumbnail downloadImageThumbnail = new DownloadImageThumbnail(context, progressBar, messageFetched,imageAttachmentPreview);
+                        DownloadImageThumbnail downloadImageThumbnail = new DownloadImageThumbnail(
+                                context, progressBar, messageFetched,imageAttachmentPreview);
                         downloadImageThumbnail.execute(messageFetched.getAuthor(), "",
                                       thumbKey);
 
@@ -246,6 +258,7 @@ public class MessagesAdapter extends BaseAdapter {
                     imageAttachmentPreview.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_play_audio));
                     textFileSize.setVisibility(View.VISIBLE);
                     textFileSize.setText(messageFetched.getMultimediaSize());
+
                     break;
                 case "videos":
                     imageAttachmentPreview.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_play_video));
