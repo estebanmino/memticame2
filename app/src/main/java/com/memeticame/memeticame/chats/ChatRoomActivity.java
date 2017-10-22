@@ -8,6 +8,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.media.MediaScannerConnection;
@@ -196,8 +198,17 @@ public class ChatRoomActivity extends AppCompatActivity {
                 } else if (copied.contains("images")){
                     Bitmap bitmapSlected = BitmapFactory.decodeFile(copied);
                     imageAttachment.setVisibility(View.VISIBLE);
-                    imageAttachment.setImageBitmap(ThumbnailUtils.extractThumbnail(bitmapSlected, 80, 80));
-                    imageAttachment.setRotation(90);
+                    ExifInterface exif = null;
+                    try {
+                        exif = new ExifInterface(copied);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                            ExifInterface.ORIENTATION_UNDEFINED);
+                    Bitmap bmRotated = rotateBitmap(bitmapSlected, orientation);
+                    imageAttachment.setImageBitmap(ThumbnailUtils.extractThumbnail(bmRotated, 80, 80));
+
                     multimedia = "images/"+copied.substring(copied.lastIndexOf("/")+1);
                 }
                 imageAttachment.setVisibility(View.VISIBLE);
@@ -730,9 +741,17 @@ public class ChatRoomActivity extends AppCompatActivity {
                             });
                     multimedia = "images/"+mPath.substring(mPath.lastIndexOf("/") + 1);
                     Bitmap bitmap = BitmapFactory.decodeFile(mPath);
+                    ExifInterface exif = null;
+                    try {
+                        exif = new ExifInterface(mPath);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                            ExifInterface.ORIENTATION_UNDEFINED);
+                    Bitmap bmRotated = rotateBitmap(bitmap, orientation);
                     imageAttachment.setVisibility(View.VISIBLE);
-                    imageAttachment.setImageBitmap(ThumbnailUtils.extractThumbnail(bitmap, 80, 80));
-                    imageAttachment.setRotation(90);
+                    imageAttachment.setImageBitmap(ThumbnailUtils.extractThumbnail(bmRotated, 80, 80));
 
                     break;
 
@@ -744,8 +763,17 @@ public class ChatRoomActivity extends AppCompatActivity {
                         multimedia = "images/"+mPath.substring(mPath.lastIndexOf("/") + 1);
                         Bitmap bitmapSlected = BitmapFactory.decodeFile(mPath);
                         imageAttachment.setVisibility(View.VISIBLE);
-                        imageAttachment.setImageBitmap(ThumbnailUtils.extractThumbnail(bitmapSlected, 80, 80));
-                        imageAttachment.setRotation(90);
+                        Bitmap bitmapa = BitmapFactory.decodeFile(mPath);
+                        ExifInterface eexif = null;
+                        try {
+                            eexif = new ExifInterface(mPath);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        int orientationn = eexif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                                ExifInterface.ORIENTATION_UNDEFINED);
+                        Bitmap bmRotatedd = rotateBitmap(bitmapa, orientationn);
+                        imageAttachment.setImageBitmap(ThumbnailUtils.extractThumbnail(bmRotatedd, 80, 80));
 
                     } else if (resultCode == Activity.RESULT_CANCELED) {
                         //Toast.makeText(LessonFormActivity.this, "Cancelled", Toast.LENGTH_SHORT).show();
@@ -797,4 +825,47 @@ public class ChatRoomActivity extends AppCompatActivity {
         return intent;
     }
 
+    public static Bitmap rotateBitmap(Bitmap bitmap, int orientation) {
+
+        Matrix matrix = new Matrix();
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_NORMAL:
+                return bitmap;
+            case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
+                matrix.setScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                matrix.setRotate(180);
+                break;
+            case ExifInterface.ORIENTATION_FLIP_VERTICAL:
+                matrix.setRotate(180);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_TRANSPOSE:
+                matrix.setRotate(90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                matrix.setRotate(90);
+                break;
+            case ExifInterface.ORIENTATION_TRANSVERSE:
+                matrix.setRotate(-90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                matrix.setRotate(-90);
+                break;
+            default:
+                return bitmap;
+        }
+        try {
+            Bitmap bmRotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+            bitmap.recycle();
+            return bmRotated;
+        }
+        catch (OutOfMemoryError e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

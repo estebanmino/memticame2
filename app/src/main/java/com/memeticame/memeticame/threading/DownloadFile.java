@@ -29,6 +29,7 @@ import com.memeticame.memeticame.MemeAudioActivity;
 import com.memeticame.memeticame.R;
 import com.memeticame.memeticame.chats.ChatRoomActivity;
 import com.memeticame.memeticame.managers.MediaPlayerManager;
+import com.memeticame.memeticame.managers.UnzipUtils;
 import com.memeticame.memeticame.models.Message;
 
 import java.io.File;
@@ -108,7 +109,7 @@ public class DownloadFile extends AsyncTask<String,Float,Integer> {
         if (multimediaFile != null) {
             fileDownloadedPath = "-";
             StorageReference riversRef = mStorageRef.child(multimediaFile);
-            String ABSOLUTE_STORAGE_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString()+"/memeticaMe";
+            final String ABSOLUTE_STORAGE_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString()+"/memeticaMe";
 
             try {
                 String rootPath=ABSOLUTE_STORAGE_PATH+"/"+multimediaFile.substring(0,multimediaFile.lastIndexOf("/"))+"/";
@@ -178,7 +179,26 @@ public class DownloadFile extends AsyncTask<String,Float,Integer> {
                                         @Override
                                         public void onClick(View view) {
                                             if (multimediaFile.substring(0, multimediaFile.lastIndexOf("/")).equals("zips")) {
-                                                Intent intentMeme = MemeAudioActivity.getIntent(context, "", multimediaFile);
+                                                Intent intentMeme = MemeAudioActivity.getIntent(context, "",
+                                                        ABSOLUTE_STORAGE_PATH+"/photoAudios/"+
+                                                                multimediaFile.substring(
+                                                                        multimediaFile.lastIndexOf("/")+1,
+                                                                        multimediaFile.length()-4)+"/"
+                                                );
+                                                Log.i("ZIP",ABSOLUTE_STORAGE_PATH+"/zips/"+multimediaFile.substring(multimediaFile.lastIndexOf("/")+1));
+                                                Log.i("ZIP",ABSOLUTE_STORAGE_PATH+"/photoAudios/"+
+                                                        multimediaFile.substring(
+                                                                multimediaFile.lastIndexOf("/")+1,
+                                                                multimediaFile.length()-3));
+                                                UnzipUtils unzipUtils = new UnzipUtils(
+                                                        ABSOLUTE_STORAGE_PATH+"/zips/"+multimediaFile.substring(multimediaFile.lastIndexOf("/")+1),
+                                                        ABSOLUTE_STORAGE_PATH+"/photoAudios/"+
+                                                                multimediaFile.substring(
+                                                                    multimediaFile.lastIndexOf("/")+1,
+                                                                    multimediaFile.length()-4)+"/"
+                                                );
+                                                unzipUtils.unzip();
+
                                                 if (intentMeme.resolveActivity(context.getPackageManager()) != null) {
                                                     context.startActivity(intentMeme);
                                                 }

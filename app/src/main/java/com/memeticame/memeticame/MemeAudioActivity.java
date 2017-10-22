@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.media.MediaScannerConnection;
@@ -25,6 +27,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -98,6 +101,11 @@ public class MemeAudioActivity extends AppCompatActivity {
 
         constraintMemeLayout = (ConstraintLayout) findViewById(R.id.constraint_meme_attachments);
         mLayout = findViewById(R.id.meme_audio_layout);
+        imagePlay = (ImageView) findViewById(R.id.image_meme_play);
+        imagePause = (ImageView) findViewById(R.id.image_meme_pause);
+        imageStop = (ImageView) findViewById(R.id.image_meme_stop);
+        imageMeme = (ImageView) findViewById(R.id.image_meme);
+
 
         if (getIntent().getStringExtra(KEY_MEME_AUDIO) == null) {
 
@@ -106,7 +114,6 @@ public class MemeAudioActivity extends AppCompatActivity {
             fabGallery = (FloatingActionButton) findViewById(R.id.fab_meme_images);
             fabCamera = (FloatingActionButton) findViewById(R.id.fab_meme_camera);
             fabRecordAudio = (FloatingActionButton) findViewById(R.id.fab_meme_audio);
-            imageMeme = (ImageView) findViewById(R.id.image_meme);
 
             setFabAddOnClickListener();
             setOnClickFabImages();
@@ -114,11 +121,53 @@ public class MemeAudioActivity extends AppCompatActivity {
             setFabRecordAudioOnClickListener();
         } else {
             constraintMemeLayout.setVisibility(View.GONE);
+            Log.i("MEMEAUDIO",getIntent().getStringExtra(KEY_MEME_AUDIO));
+            File directory = new File(getIntent().getStringExtra(KEY_MEME_AUDIO));
+            File[] files = directory.listFiles();
+            Log.d("Files", "Size: "+ files.length);
+            for (int i = 0; i < files.length; i++)
+            {
+                if (files[i].getName().contains("3gp")){
+                    audioPath = files[i].getPath();
+                    final MediaPlayerManager mediaPlayerManager = new MediaPlayerManager(MemeAudioActivity.this,
+                            Uri.fromFile(new File(audioPath)), imagePlay, imagePause, imageStop);
+
+                    imagePlay.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Log.i("IMAGEPLAY","CLICKED");
+                            mediaPlayerManager.onPlay();
+                        }
+                    });
+
+                    imagePause.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            mediaPlayerManager.onPause();
+                        }
+                    });
+
+                    imageStop.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            mediaPlayerManager.onStop();
+                        }
+                    });
+                } else {
+                    imagePath = files[i].getPath();
+                    Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
+                    imageMeme.setVisibility(View.VISIBLE);
+                    imageMeme.setImageBitmap(bitmap);
+                    imageMeme.setAnimation(AnimationUtils.loadAnimation(MemeAudioActivity.this
+                            .getApplicationContext(), R.anim.zoomin));
+                    imageMeme.setAnimation(AnimationUtils.loadAnimation(MemeAudioActivity.this
+                            .getApplicationContext(), R.anim.zoomout));
+                }
+                Log.d("Files", "FileName:" + files[i].getName());
+            }
         }
 
-        imagePlay = (ImageView) findViewById(R.id.image_meme_play);
-        imagePause = (ImageView) findViewById(R.id.image_meme_pause);
-        imageStop = (ImageView) findViewById(R.id.image_meme_stop);
+
     }
 
     public void setFabRecordAudioOnClickListener(){
@@ -480,7 +529,17 @@ public class MemeAudioActivity extends AppCompatActivity {
                     //multimedia = "images/"+imagePath.substring(imagePath.lastIndexOf("/") + 1);
                     Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
                     imageMeme.setVisibility(View.VISIBLE);
-                    imageMeme.setImageBitmap(bitmap);
+                    ExifInterface exif = null;
+                    try {
+                        exif = new ExifInterface(imagePath);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                            ExifInterface.ORIENTATION_UNDEFINED);
+                    Bitmap bmRotated = rotateBitmap(bitmap, orientation);
+                    imageMeme.setImageBitmap(bmRotated);
+
                     //imageAttachment.setRotation(90);
 
                     break;
@@ -502,6 +561,49 @@ public class MemeAudioActivity extends AppCompatActivity {
                     break;
 
             }
+        }
+    }
+    public static Bitmap rotateBitmap(Bitmap bitmap, int orientation) {
+
+        Matrix matrix = new Matrix();
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_NORMAL:
+                return bitmap;
+            case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
+                matrix.setScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                matrix.setRotate(180);
+                break;
+            case ExifInterface.ORIENTATION_FLIP_VERTICAL:
+                matrix.setRotate(180);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_TRANSPOSE:
+                matrix.setRotate(90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                matrix.setRotate(90);
+                break;
+            case ExifInterface.ORIENTATION_TRANSVERSE:
+                matrix.setRotate(-90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                matrix.setRotate(-90);
+                break;
+            default:
+                return bitmap;
+        }
+        try {
+            Bitmap bmRotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+            bitmap.recycle();
+            return bmRotated;
+        }
+        catch (OutOfMemoryError e) {
+            e.printStackTrace();
+            return null;
         }
     }
 }
