@@ -129,6 +129,20 @@
             app:layout_constraintTop_toBottomOf="@+id/image_attachment_preview"
             app:layout_constraintVertical_bias="0.0" />
 
+        <ImageButton
+            android:id="@+id/image_copy"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginLeft="0dp"
+            android:layout_marginRight="0dp"
+            android:layout_marginTop="4dp"
+            android:backgroundTint="@android:color/transparent"
+            android:visibility="gone"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/text_message_body"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="?attr/actionModeCopyDrawable" />
+
         <ImageView
             android:id="@+id/image_attachment_preview"
             android:layout_width="60dp"

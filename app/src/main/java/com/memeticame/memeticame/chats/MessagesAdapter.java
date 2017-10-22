@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -34,6 +35,7 @@ import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
+import com.memeticame.memeticame.MemeAudioActivity;
 import com.memeticame.memeticame.R;
 import com.memeticame.memeticame.cache.LRUCache;
 import com.memeticame.memeticame.models.Message;
@@ -114,14 +116,13 @@ public class MessagesAdapter extends BaseAdapter {
             LayoutInflater layoutInflater =
                     (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = layoutInflater.inflate(R.layout.chat_message_received, null);
-
-
         }
         else {
             LayoutInflater layoutInflater =
                     (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = layoutInflater.inflate(R.layout.chat_message_sent, null);
         }
+
         final LinearLayout layoutAudioHandler = convertView.findViewById(R.id.audio_handler);
         final ImageView imagePlay = convertView.findViewById(R.id.image_play);
         final ImageView imagePause = convertView.findViewById(R.id.image_pause);
@@ -141,11 +142,14 @@ public class MessagesAdapter extends BaseAdapter {
         final long messageTimestamp = messageFetched.getTimestamp();
         final String messageAuthor = messageFetched.getAuthor();
 
+        final ImageButton imageCopy = convertView.findViewById(R.id.image_copy);
+
 
 
         if (messageFetched.getMultimedia() == null){
             imageAttachmentPreview.setVisibility(View.GONE);
             btnDownload.setVisibility(View.GONE);
+            imageCopy.setVisibility(View.GONE);
 
         } else if (messageFetched.getMultimediaPath() != null && messageFetched.getMultimediaPath().length() > 3) {
             final String multimediaFile = messageFetched.getMultimediaPath();
@@ -175,7 +179,6 @@ public class MessagesAdapter extends BaseAdapter {
                             break;
 
                         case "audios":
-                            Log.i("DOWNLOADAUDIO","TRUE");
                             btnDownload.setVisibility(View.INVISIBLE);
                             layoutAudioHandler.setVisibility(View.VISIBLE);
 
@@ -194,17 +197,20 @@ public class MessagesAdapter extends BaseAdapter {
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
-
                             break;
 
                         case "files":
-                            String ext = multimediaFile.substring(multimediaFile.lastIndexOf(".") + 1);
                             intent.setDataAndType(Uri.parse(
                                     Uri.fromFile(new File(multimediaFile)).toString()), "application/pdf");
                             Intent chooser3 = Intent.createChooser(intent, title);
                             if (chooser3.resolveActivity(context.getPackageManager()) != null) {
                                 context.startActivity(chooser3);
                             }
+                            break;
+
+                        case "zips":
+                            Intent intentMeme = MemeAudioActivity.getIntent(context, "", multimediaFile);
+                            context.startActivity(intentMeme);
                             break;
 
                     }
@@ -215,11 +221,12 @@ public class MessagesAdapter extends BaseAdapter {
                     @Override
                     public void onClick(View view) {
                         DownloadFile downloadFile = new DownloadFile(context, btnDownload, progressBar, messageFetched, layoutAudioHandler,
-                                imagePlay,imagePause,imageStop);
+                                imagePlay,imagePause,imageStop,imageCopy);
                         downloadFile.execute(messageFetched.getAuthor(), "",
                                 messageFetched.getMultimedia());
 
-            }});
+
+                    }});
             switch(messageFetched.getMultimediaType()) {
                 case "images":
                     imageAttachmentPreview.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_gallery_dark));
@@ -265,6 +272,12 @@ public class MessagesAdapter extends BaseAdapter {
                     textFileSize.setVisibility(View.VISIBLE);
                     textFileSize.setText(messageFetched.getMultimediaSize());
                     break;
+                case "zips":
+                    imageAttachmentPreview.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_meme_audio));
+                    //textFileName.setVisibility(View.VISIBLE);
+                    textFileSize.setVisibility(View.VISIBLE);
+                    textFileName.setText(messageFetched.getMultimediaName());
+                    textFileSize.setText(messageFetched.getMultimediaSize());
             }
                  }
         if (getItemViewType(position) == VIEW_TYPE_MESSAGE_RECEIVED) {

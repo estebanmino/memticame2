@@ -34,97 +34,105 @@
         app:layout_constraintRight_toRightOf="parent">
 
         <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab_files"
+            android:id="@+id/fab_meme_audio"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
             android:layout_marginTop="8dp"
             android:clickable="true"
             app:backgroundTint="@color/colorPrimary"
             app:fabSize="mini"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.2"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.0"
+            app:srcCompat="@drawable/ic_meme_audio"
+            app:layout_constraintLeft_toRightOf="@+id/fab_camera"
+            android:layout_marginLeft="8dp" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab_files"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:clickable="true"
+            app:backgroundTint="@color/colorPrimary"
+            app:fabSize="mini"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:srcCompat="@drawable/ic_folder_dark"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp" />
+            android:layout_marginEnd="8dp"
+            android:layout_marginLeft="8dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            android:layout_marginRight="8dp"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintHorizontal_bias="0.15" />
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab_video"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:layout_marginLeft="8dp"
             android:layout_marginTop="8dp"
             android:clickable="true"
             app:backgroundTint="@color/colorPrimary"
             app:fabSize="mini"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toRightOf="@+id/fab_audio"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.0"
             app:srcCompat="@drawable/ic_action_name"
-            android:layout_marginStart="8dp" />
+            android:layout_marginStart="8dp"
+            app:layout_constraintLeft_toRightOf="@+id/fab_audio"
+            android:layout_marginLeft="8dp" />
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab_images"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:layout_marginLeft="8dp"
             android:layout_marginTop="8dp"
             android:clickable="true"
             app:backgroundTint="@color/colorPrimary"
             app:fabSize="mini"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toRightOf="@+id/fab_files"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.0"
             app:srcCompat="@drawable/ic_gallery_dark"
-            android:layout_marginStart="8dp" />
+            android:layout_marginStart="8dp"
+            app:layout_constraintLeft_toRightOf="@+id/fab_files"
+            android:layout_marginLeft="32dp" />
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab_audio"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:layout_marginLeft="8dp"
             android:layout_marginTop="8dp"
             android:clickable="true"
             app:backgroundTint="@color/colorPrimary"
             app:fabSize="mini"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toRightOf="@+id/fab_images"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.0"
             app:srcCompat="@drawable/ic_mic_dark"
-            android:layout_marginStart="8dp" />
+            android:layout_marginStart="8dp"
+            app:layout_constraintLeft_toRightOf="@+id/fab_images"
+            android:layout_marginLeft="8dp" />
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab_camera"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
             android:layout_marginTop="8dp"
             android:clickable="true"
             app:backgroundTint="@color/colorPrimary"
             app:fabSize="mini"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintLeft_toRightOf="@+id/fab_video"
-            app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.0"
             app:srcCompat="@drawable/ic_camera_dark"
             android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp" />
+            app:layout_constraintLeft_toRightOf="@+id/fab_video"
+            android:layout_marginLeft="8dp" />
 
     </android.support.constraint.ConstraintLayout>
 
@@ -139,6 +147,19 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/progressBar"
         app:layout_constraintVertical_bias="1.0">
+
+        <ImageView
+            android:id="@+id/image_paste"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_marginRight="0dp"
+            android:layout_marginTop="8dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/image_add_attachment"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="?attr/actionModeCopyDrawable" />
 
         <ImageView
             android:id="@+id/image_attachment"
@@ -186,23 +207,23 @@
 
         <EditText
             android:id="@+id/edit_message"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
             android:layout_marginBottom="8dp"
-            android:layout_marginEnd="8dp"
             android:layout_marginLeft="10dp"
-            android:layout_marginRight="8dp"
             android:layout_marginStart="10dp"
             android:layout_marginTop="8dp"
             android:layout_weight="1"
             android:ems="10"
-            android:hint="Write your message..."
+            android:hint="Write your message"
             android:inputType="textPersonName"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toRightOf="@+id/image_attachment"
-            app:layout_constraintRight_toLeftOf="@+id/image_add_attachment"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0"
+            app:layout_constraintRight_toLeftOf="@+id/image_paste"
+            android:layout_marginRight="0dp" />
 
     </android.support.constraint.ConstraintLayout>
 

@@ -44,23 +44,21 @@
         <activity android:name=".chats.ChatRoomActivity" />
 
         <!-- Pusher's FCM listeners and services -->
-        <service
-            android:name="com.pusher.android.notifications.fcm.FCMMessagingService">
+        <service android:name="com.pusher.android.notifications.fcm.FCMMessagingService">
             <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
-        <service
-            android:name="com.pusher.android.notifications.fcm.FCMInstanceIDService">
+        <service android:name="com.pusher.android.notifications.fcm.FCMInstanceIDService">
             <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
 
         <activity android:name=".invitations.NewGroupInvitationActivity" />
         <activity android:name=".chats.ChatRoomInformationActivity" />
-        <activity android:name=".chats.ChatRoomAddMemberActivity"></activity>
+        <activity android:name=".chats.ChatRoomAddMemberActivity" />
+        <activity android:name=".MemeAudioActivity"></activity>
     </application>
 
 </manifest>

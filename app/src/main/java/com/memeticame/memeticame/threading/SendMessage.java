@@ -116,6 +116,7 @@ public class SendMessage extends AsyncTask<String,Float,Integer> {
         publishProgress(10f);
 
         if (multimediaFile != null) {
+            Log.i("MPATH",filePath);
             Uri file = Uri.fromFile(new File(filePath));
             StorageReference riversRef = mStorageRef.child(multimediaFile);
 

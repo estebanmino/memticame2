@@ -2,6 +2,7 @@ package com.memeticame.memeticame.threading;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -10,9 +11,11 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -22,6 +25,7 @@ import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
+import com.memeticame.memeticame.MemeAudioActivity;
 import com.memeticame.memeticame.R;
 import com.memeticame.memeticame.chats.ChatRoomActivity;
 import com.memeticame.memeticame.managers.MediaPlayerManager;
@@ -48,10 +52,11 @@ public class DownloadFile extends AsyncTask<String,Float,Integer> {
     private ImageView imagePlay;
     private ImageView imagePause;
     private ImageView imageStop;
+    private ImageButton imageCopy;
 
     public DownloadFile(Context context, Button btnDownload, ProgressBar progressBar,
                         Message message, LinearLayout layoutAudioHandler, ImageView imagePlay,
-                        ImageView imagePause, ImageView imageStop) {
+                        ImageView imagePause, ImageView imageStop, ImageButton imageCopy) {
         this.context = context;
         this.btnDownload = btnDownload;
         this.progressBar = progressBar;
@@ -60,6 +65,7 @@ public class DownloadFile extends AsyncTask<String,Float,Integer> {
         this.imagePause = imagePause;
         this.imagePlay = imagePlay;
         this.imageStop = imageStop;
+        this.imageCopy = imageCopy;
     }
 
 
@@ -100,13 +106,17 @@ public class DownloadFile extends AsyncTask<String,Float,Integer> {
         publishProgress(10f);
 
         if (multimediaFile != null) {
-            StorageReference islandRef = mStorageRef.child(multimediaFile);
             fileDownloadedPath = "-";
             StorageReference riversRef = mStorageRef.child(multimediaFile);
-            String ABSOLUTE_STORAGE_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString();
+            String ABSOLUTE_STORAGE_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString()+"/memeticaMe";
 
             try {
-                final File localFile = new File(ABSOLUTE_STORAGE_PATH+"/memeticaMe/"+multimediaFile.substring(multimediaFile.lastIndexOf("/")+1));
+                String rootPath=ABSOLUTE_STORAGE_PATH+"/"+multimediaFile.substring(0,multimediaFile.lastIndexOf("/"))+"/";
+                File file=new File(rootPath);
+                if(!file.exists()){
+                    file.mkdirs();
+                }
+                final File localFile = new File(ABSOLUTE_STORAGE_PATH+"/"+multimediaFile);
 
                 riversRef.getFile(localFile)
                         .addOnProgressListener(new OnProgressListener<FileDownloadTask.TaskSnapshot>() {
@@ -163,20 +173,42 @@ public class DownloadFile extends AsyncTask<String,Float,Integer> {
                                     }
                                 });
 
-                                if (multimediaFile.substring(0, multimediaFile.lastIndexOf("/")) != "audios") {
 
                                     btnDownload.setOnClickListener(new View.OnClickListener() {
                                         @Override
                                         public void onClick(View view) {
-
-                                            try {
-                                                openFile(context, Uri.fromFile(new File(localFile.getPath())), localFile.getPath());
-                                            } catch (Exception e) {
+                                            if (multimediaFile.substring(0, multimediaFile.lastIndexOf("/")).equals("zips")) {
+                                                Intent intentMeme = MemeAudioActivity.getIntent(context, "", multimediaFile);
+                                                if (intentMeme.resolveActivity(context.getPackageManager()) != null) {
+                                                    context.startActivity(intentMeme);
+                                                }
+                                            }
+                                            else if (!multimediaFile.substring(0, multimediaFile.lastIndexOf("/")).equals("audios") &&
+                                                    !multimediaFile.substring(0, multimediaFile.lastIndexOf("/")).equals("zips")) {
+                                                try {
+                                                    openFile(context, Uri.fromFile(new File(localFile.getPath())), localFile.getPath());
+                                                } catch (Exception e) {}
                                             }
                                         }
                                     });
+                                ((ChatRoomActivity) context).runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        imageCopy.setVisibility(View.VISIBLE);
+                                    }
+                                });
+                                imageCopy.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+                                            Toast.makeText(context, "Copied", Toast.LENGTH_SHORT).show();
+                                            SharedPreferences sp = context.getSharedPreferences("UserData",Context.MODE_PRIVATE);
+                                            SharedPreferences.Editor editor = sp.edit();
+                                            editor.putString("copiedPath",localFile.getPath());
+                                            editor.apply();
+                                        }
+                                    });
+                            }
 
-                                }    }
                         }).addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception exception) {
@@ -186,7 +218,6 @@ public class DownloadFile extends AsyncTask<String,Float,Integer> {
                 });
             } catch (Exception e) {
             }
-
 
             publishProgress(30f);
         }

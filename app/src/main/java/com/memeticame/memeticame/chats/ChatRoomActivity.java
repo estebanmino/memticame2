@@ -37,6 +37,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
+import com.memeticame.memeticame.MemeAudioActivity;
 import com.memeticame.memeticame.R;
 import com.memeticame.memeticame.models.Contact;
 import com.memeticame.memeticame.models.Database;
@@ -63,6 +64,7 @@ public class ChatRoomActivity extends AppCompatActivity {
     private static final int READ_EXTERNAL_REQUEST = 1884;
     private static final int RECORD_AUDIO_REQUEST = 1883;
     private static final int FILES_REQUEST = 1882;
+    private static final int MEME_AUDIO_REQUEST = 1777;
 
     private static String ABSOLUTE_STORAGE_PATH;
     private MediaRecorder mRecorder = null;
@@ -101,7 +103,10 @@ public class ChatRoomActivity extends AppCompatActivity {
     private FloatingActionButton fabAudio;
     private FloatingActionButton fabImages;
     private FloatingActionButton fabFiles;
+    private FloatingActionButton fabMemeAudio;
     private ProgressBar progressBar;
+
+    private  ImageView  imageCopy;
 
     //LOCAL VARIABLES
     private String mPath;
@@ -139,6 +144,7 @@ public class ChatRoomActivity extends AppCompatActivity {
         fabVideo = (FloatingActionButton) findViewById(R.id.fab_video);
         fabFiles = (FloatingActionButton) findViewById(R.id.fab_files);
         fabImages = (FloatingActionButton) findViewById(R.id.fab_images);
+        fabMemeAudio = (FloatingActionButton) findViewById(R.id.fab_meme_audio);
 
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
@@ -165,6 +171,43 @@ public class ChatRoomActivity extends AppCompatActivity {
         setOnClickFabVideo();
         setOnClickFabFiles();
         setOnClickFabImages();
+        setOnClickFabMemeAudio();
+
+        imageCopy  = (ImageView) findViewById(R.id.image_paste);
+        final String copiedPath  = sharedPreferences.getString("copiedPath", null);
+        if (!copiedPath.equals("null")) {
+            imageCopy.setVisibility(View.VISIBLE);
+        }
+        imageCopy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SharedPreferences sharedPreferences = getSharedPreferences("UserData",Context.MODE_PRIVATE);
+                final String copied = sharedPreferences.getString("copiedPath", "null");
+                mPath = copied;
+                if (copied.contains("audios")){
+                    imageAttachment.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_play_audio));
+                    multimedia = "audios/"+copied.substring(copied.lastIndexOf("/")+1);
+                } else if (copied.contains("files")) {
+                    imageAttachment.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_file_download));
+                    multimedia = "files/"+copied.substring(copied.lastIndexOf("/")+1);
+                } else if (copied.contains("videos")) {
+                    imageAttachment.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_play_video));
+                    multimedia = "videos/"+copied.substring(copied.lastIndexOf("/")+1);
+                } else if (copied.contains("images")){
+                    Bitmap bitmapSlected = BitmapFactory.decodeFile(copied);
+                    imageAttachment.setVisibility(View.VISIBLE);
+                    imageAttachment.setImageBitmap(ThumbnailUtils.extractThumbnail(bitmapSlected, 80, 80));
+                    imageAttachment.setRotation(90);
+                    multimedia = "images/"+copied.substring(copied.lastIndexOf("/")+1);
+                }
+                imageAttachment.setVisibility(View.VISIBLE);
+                SharedPreferences.Editor editor = getSharedPreferences("UserData",Context.MODE_PRIVATE).edit();
+                editor.putString("copiedPath","null");
+                editor.apply();
+                imageCopy.setVisibility(View.GONE);
+            }
+        });
+
 
     }
 
@@ -338,6 +381,7 @@ public class ChatRoomActivity extends AppCompatActivity {
             }
         }
     }
+
     public void getWriteStoragePermissions() {
         if (ContextCompat.checkSelfPermission(ChatRoomActivity.this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -361,6 +405,7 @@ public class ChatRoomActivity extends AppCompatActivity {
             }
         }
     }
+
     private void dispatchTakePictureIntent() {
 
         File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), APP_DIRECTORY);
@@ -381,6 +426,19 @@ public class ChatRoomActivity extends AppCompatActivity {
         takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(newFile));
         startActivityForResult(takePictureIntent, CAMERA_REQUEST_PICTURE);
+    }
+
+    public void setOnClickFabMemeAudio() {
+        fabMemeAudio.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivityForResult(MemeAudioActivity.getIntent(
+                        ChatRoomActivity.this,
+                        getIntent().getStringExtra(KEY_CHAT_ROOM_NAME),
+                        null
+                ),MEME_AUDIO_REQUEST);
+            }
+        });
     }
 
     public void setOnClickFabVideo(){
@@ -462,6 +520,7 @@ public class ChatRoomActivity extends AppCompatActivity {
         }
             });
     };
+
     public void setOnClickFabImages(){
         fabImages.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -717,6 +776,13 @@ public class ChatRoomActivity extends AppCompatActivity {
                     imageAttachment.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_play_video));
                     imageAttachment.setVisibility(View.VISIBLE);
 
+                    break;
+
+                case MEME_AUDIO_REQUEST:
+                    mPath = data.getStringExtra("path");
+                    multimedia = "zips/"+mPath.substring(mPath.lastIndexOf("/") + 1);
+                    imageAttachment.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_meme_audio));
+                    imageAttachment.setVisibility(View.VISIBLE);
                     break;
             }
         }
