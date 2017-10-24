@@ -195,6 +195,9 @@ public class ChatRoomActivity extends AppCompatActivity {
                 } else if (copied.contains("videos")) {
                     imageAttachment.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_play_video));
                     multimedia = "videos/"+copied.substring(copied.lastIndexOf("/")+1);
+                } else if (copied.contains("zips")) {
+                    imageAttachment.setImageDrawable(ContextCompat.getDrawable(ChatRoomActivity.this, R.drawable.ic_meme_audio));
+                multimedia = "zips/"+copied.substring(copied.lastIndexOf("/")+1);
                 } else if (copied.contains("images")){
                     Bitmap bitmapSlected = BitmapFactory.decodeFile(copied);
                     imageAttachment.setVisibility(View.VISIBLE);

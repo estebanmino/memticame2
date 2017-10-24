@@ -221,6 +221,7 @@ public class DownloadFile extends AsyncTask<String,Float,Integer> {
                                         @Override
                                         public void onClick(View view) {
                                             Toast.makeText(context, "Copied", Toast.LENGTH_SHORT).show();
+                                            Log.i("COPIEDPATH", localFile.getPath());
                                             SharedPreferences sp = context.getSharedPreferences("UserData",Context.MODE_PRIVATE);
                                             SharedPreferences.Editor editor = sp.edit();
                                             editor.putString("copiedPath",localFile.getPath());
