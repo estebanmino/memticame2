@@ -8,48 +8,24 @@
     android:layout_height="match_parent"
     tools:context="com.memeticame.memeticame.MemeAudioActivity">
 
-    <LinearLayout
-        android:id="@+id/meme_audio_handler"
-        android:layout_width="wrap_content"
-        android:layout_height="60dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
-        android:orientation="horizontal"
-        android:visibility="visible"
+    <com.github.chrisbanes.photoview.PhotoView
+        android:id="@+id/image_meme"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="0dp"
+        android:layout_marginEnd="0dp"
+        android:layout_marginLeft="0dp"
+        android:layout_marginRight="0dp"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="0dp"
+        android:adjustViewBounds="true"
+        android:scaleType="centerInside"
+        app:layout_constraintBottom_toTopOf="@+id/constraint_meme_attachments"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintBottom_toBottomOf="@+id/image_meme"
-        android:layout_marginBottom="8dp">
-
-        <ImageButton
-            android:id="@+id/image_meme_play"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_weight="1"
-            android:backgroundTint="@color/colorPrimary"
-            android:src="@drawable/ic_play_audio" />
-
-        <ImageButton
-            android:id="@+id/image_meme_pause"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_weight="1"
-            android:backgroundTint="@color/colorPrimary"
-            android:src="@drawable/ic_pause_audio"
-            android:visibility="visible" />
-
-        <ImageButton
-            android:id="@+id/image_meme_stop"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_weight="1"
-            android:backgroundTint="@color/colorPrimary"
-            android:src="@drawable/ic_stop_audio" />
-
-    </LinearLayout>
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@android:drawable/ic_menu_report_image" />
 
     <android.support.constraint.ConstraintLayout
         android:id="@+id/constraint_meme_attachments"
@@ -134,19 +110,47 @@
 
     </android.support.constraint.ConstraintLayout>
 
-    <ImageView
-        android:id="@+id/image_meme"
-        android:layout_width="0dp"
-        android:layout_height="435dp"
+    <LinearLayout
+        android:id="@+id/meme_audio_handler"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:layout_marginEnd="8dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
-        android:layout_marginTop="0dp"
+        android:layout_marginStart="8dp"
+        android:orientation="horizontal"
+        android:visibility="visible"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@android:drawable/ic_menu_report_image"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/constraint_meme_attachments" />
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/constraint_meme_attachments">
+
+        <ImageButton
+            android:id="@+id/image_meme_play"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/colorPrimary"
+            android:src="@drawable/ic_play_audio" />
+
+        <ImageButton
+            android:id="@+id/image_meme_pause"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/colorPrimary"
+            android:src="@drawable/ic_pause_audio"
+            android:visibility="visible" />
+
+        <ImageButton
+            android:id="@+id/image_meme_stop"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/colorPrimary"
+            android:src="@drawable/ic_stop_audio" />
+
+    </LinearLayout>
+
 </android.support.constraint.ConstraintLayout>

@@ -32,6 +32,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.github.chrisbanes.photoview.PhotoView;
+import com.github.chrisbanes.photoview.PhotoViewAttacher;
 import com.memeticame.memeticame.chats.ChatRoomActivity;
 import com.memeticame.memeticame.managers.MediaPlayerManager;
 import com.memeticame.memeticame.managers.ZipManager;
@@ -81,13 +83,15 @@ public class MemeAudioActivity extends AppCompatActivity {
     private FloatingActionButton fabGallery;
     private FloatingActionButton fabCamera;
     private FloatingActionButton fabRecordAudio;
-    private ImageView imageMeme;
+    private PhotoView imageMeme;
 
     private ImageView imagePlay;
     private ImageView imagePause;
     private ImageView imageStop;
 
     private ConstraintLayout constraintMemeLayout;
+
+    PhotoViewAttacher photoViewAttacher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,8 +108,7 @@ public class MemeAudioActivity extends AppCompatActivity {
         imagePlay = (ImageView) findViewById(R.id.image_meme_play);
         imagePause = (ImageView) findViewById(R.id.image_meme_pause);
         imageStop = (ImageView) findViewById(R.id.image_meme_stop);
-        imageMeme = (ImageView) findViewById(R.id.image_meme);
-
+        imageMeme = (PhotoView) findViewById(R.id.image_meme);
 
         if (getIntent().getStringExtra(KEY_MEME_AUDIO) == null) {
 
@@ -121,7 +124,6 @@ public class MemeAudioActivity extends AppCompatActivity {
             setFabRecordAudioOnClickListener();
         } else {
             constraintMemeLayout.setVisibility(View.GONE);
-            Log.i("MEMEAUDIO",getIntent().getStringExtra(KEY_MEME_AUDIO));
             File directory = new File(getIntent().getStringExtra(KEY_MEME_AUDIO));
             File[] files = directory.listFiles();
             Log.d("Files", "Size: "+ files.length);
@@ -165,18 +167,18 @@ public class MemeAudioActivity extends AppCompatActivity {
                     int orientation2 = exif2.getAttributeInt(ExifInterface.TAG_ORIENTATION,
                             ExifInterface.ORIENTATION_UNDEFINED);
                     Bitmap bmRotated2 = rotateBitmap(bitmap, orientation2);
-                    imageMeme.setImageBitmap(bmRotated2);
                     imageMeme.setVisibility(View.VISIBLE);
                     imageMeme.setImageBitmap(bmRotated2);
-                    imageMeme.setAnimation(AnimationUtils.loadAnimation(MemeAudioActivity.this
-                            .getApplicationContext(), R.anim.zoomin));
-                    imageMeme.setAnimation(AnimationUtils.loadAnimation(MemeAudioActivity.this
-                            .getApplicationContext(), R.anim.zoomout));
+                    //imageMeme.setAnimation(AnimationUtils.loadAnimation(MemeAudioActivity.this
+                    //        .getApplicationContext(), R.anim.zoomin));
+                    //imageMeme.setAnimation(AnimationUtils.loadAnimation(MemeAudioActivity.this
+                    //        .getApplicationContext(), R.anim.zoomout));
+                    //photoViewAttacher = new PhotoViewAttacher(imageMeme);
+
                 }
                 Log.d("Files", "FileName:" + files[i].getName());
             }
         }
-
 
     }
 
