@@ -156,8 +156,18 @@ public class MemeAudioActivity extends AppCompatActivity {
                 } else {
                     imagePath = files[i].getPath();
                     Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
+                    ExifInterface exif2 = null;
+                    try {
+                        exif2 = new ExifInterface(imagePath);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    int orientation2 = exif2.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                            ExifInterface.ORIENTATION_UNDEFINED);
+                    Bitmap bmRotated2 = rotateBitmap(bitmap, orientation2);
+                    imageMeme.setImageBitmap(bmRotated2);
                     imageMeme.setVisibility(View.VISIBLE);
-                    imageMeme.setImageBitmap(bitmap);
+                    imageMeme.setImageBitmap(bmRotated2);
                     imageMeme.setAnimation(AnimationUtils.loadAnimation(MemeAudioActivity.this
                             .getApplicationContext(), R.anim.zoomin));
                     imageMeme.setAnimation(AnimationUtils.loadAnimation(MemeAudioActivity.this
@@ -552,7 +562,16 @@ public class MemeAudioActivity extends AppCompatActivity {
                         //multimedia = "images/"+imagePath.substring(imagePath.lastIndexOf("/") + 1);
                         Bitmap bitmapSlected = BitmapFactory.decodeFile(imagePath);
                         imageMeme.setVisibility(View.VISIBLE);
-                        imageMeme.setImageBitmap(bitmapSlected);
+                        ExifInterface exif2 = null;
+                        try {
+                            exif2 = new ExifInterface(imagePath);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        int orientation2 = exif2.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                                ExifInterface.ORIENTATION_UNDEFINED);
+                        Bitmap bmRotated2 = rotateBitmap(bitmapSlected, orientation2);
+                        imageMeme.setImageBitmap(bmRotated2);
                         //imageAttachment.setRotation(90);
 
                     } else if (resultCode == Activity.RESULT_CANCELED) {
@@ -598,7 +617,7 @@ public class MemeAudioActivity extends AppCompatActivity {
         }
         try {
             Bitmap bmRotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-            bitmap.recycle();
+            // bitmap.recycle();
             return bmRotated;
         }
         catch (OutOfMemoryError e) {
