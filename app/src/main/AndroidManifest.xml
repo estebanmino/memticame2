@@ -58,7 +58,8 @@
         <activity android:name=".invitations.NewGroupInvitationActivity" />
         <activity android:name=".chats.ChatRoomInformationActivity" />
         <activity android:name=".chats.ChatRoomAddMemberActivity" />
-        <activity android:name=".MemeAudioActivity"></activity>
+        <activity android:name=".MemeAudioActivity" />
+        <activity android:name=".GalleryActivity"></activity>
     </application>
 
 </manifest>

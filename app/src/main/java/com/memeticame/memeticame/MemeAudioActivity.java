@@ -100,7 +100,7 @@ public class MemeAudioActivity extends AppCompatActivity {
         ABSOLUTE_STORAGE_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString();
         //back toolbar
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("MA for "+ getIntent().getStringExtra(KEY_CHAT_ROOM_NAME));
+            getSupportActionBar().setTitle("PhotoAudio "+ getIntent().getStringExtra(KEY_CHAT_ROOM_NAME));
         }
 
         constraintMemeLayout = (ConstraintLayout) findViewById(R.id.constraint_meme_attachments);

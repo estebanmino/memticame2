@@ -3,6 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.memeticame.memeticame.MainActivity">
     <item
+        android:id="@+id/action_to_gallery"
+        android:orderInCategory="100"
+        android:title="Gallery"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_add_contact"
         android:orderInCategory="100"
         android:title="Add Contact"

@@ -70,6 +70,10 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         switch (id) {
+            case  R.id.action_to_gallery:
+                startActivity(GalleryActivity.getIntent(MainActivity.this));
+                return true;
+
             case  R.id.action_add_contact:
                 Intent intent = new Intent(Intent.ACTION_INSERT_OR_EDIT);
                 intent.setType(ContactsContract.Contacts.CONTENT_ITEM_TYPE);
