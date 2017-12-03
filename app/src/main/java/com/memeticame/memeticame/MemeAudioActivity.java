@@ -16,6 +16,7 @@ import android.media.MediaScannerConnection;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -102,6 +103,8 @@ public class MemeAudioActivity extends AppCompatActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("PhotoAudio "+ getIntent().getStringExtra(KEY_CHAT_ROOM_NAME));
         }
+        StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+        StrictMode.setVmPolicy(builder.build());
 
         constraintMemeLayout = (ConstraintLayout) findViewById(R.id.constraint_meme_attachments);
         mLayout = findViewById(R.id.meme_audio_layout);
@@ -584,6 +587,7 @@ public class MemeAudioActivity extends AppCompatActivity {
             }
         }
     }
+
     public static Bitmap rotateBitmap(Bitmap bitmap, int orientation) {
 
         Matrix matrix = new Matrix();
